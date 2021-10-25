@@ -1,7 +1,7 @@
 name: Wheels
 
 on:
-  #workflow_dispatch:  Manually run test
+  workflow_dispatch:  Manually run test
   pull_request:
   push:
     branches:

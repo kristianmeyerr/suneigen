@@ -47,3 +47,5 @@ _generate/
 *.py[cod]
 *.egg-info
 *env*
+
+/thirdparty/pybind11/

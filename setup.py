@@ -129,7 +129,7 @@ setup(
     author_email="km@meyerct.com",
     description="A C++ wrapper with a python interface to SUNDIALS.",
     long_description="This package provides a C++ interface to SUNDIALS. "
-                     "It uses EIGEN for vector/matrix operations as well as linear algebra.",
+    "It uses EIGEN for vector/matrix operations as well as linear algebra.",
     ext_modules=[CMakeExtension("cmake_example")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,

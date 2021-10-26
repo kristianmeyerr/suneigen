@@ -12,7 +12,7 @@ on:
 
 # Set environment variables
 env:
-  CIBW_TEST_COMMAND: pytest suneigen/tests
+  CIBW_TEST_COMMAND: pytest {project}/tests
   CIBW_TEST_EXTRAS: test
 
 
@@ -59,7 +59,7 @@ jobs:
         env:
           CIBW_SKIP: cp36-* cp310-* pp37-*
           CIBW_TEST_EXTRAS: test
-          CIBW_TEST_COMMAND: pytest suneigen/tests
+          CIBW_TEST_COMMAND: pytest {project}/tests
 
       - name: Verify clean directory
         run: git diff --exit-code

@@ -29,8 +29,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           auto-update-conda: true
-          auto-activate-base: true
-          activate-environment: ""
 
       - name: Conda info
         shell: bash -l {0}

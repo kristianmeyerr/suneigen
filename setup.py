@@ -123,12 +123,13 @@ class CMakeBuild(build_ext):
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
-    name="cmake_example",
-    version="0.0.1",
-    author="Dean Moldovan",
-    author_email="dean0x7d@gmail.com",
-    description="A test project using pybind11 and CMake",
-    long_description="",
+    name="suneigen4py",
+    version="1.0.0",
+    author="Kristian Meyer",
+    author_email="km@meyerct.com",
+    description="A C++ wrapper with a python interface to SUNDIALS.",
+    long_description="This package provides a C++ interface to SUNDIALS. "
+                     "It uses EIGEN for vector/matrix operations as well as linear algebra.",
     ext_modules=[CMakeExtension("cmake_example")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,

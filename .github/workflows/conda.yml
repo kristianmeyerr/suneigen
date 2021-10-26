@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-latest, windows-latest, macos-latest]
+        platform: [macos-latest]
         python-version: ["3.6", "3.8", "3.9"]
 
     steps:
@@ -28,8 +28,9 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
-          channels: conda-forge
-          channel-priority: strict
+          auto-update-conda: true
+          auto-activate-base: true
+          activate-environment: ""
 
       - name: Conda info
         shell: bash -l {0}

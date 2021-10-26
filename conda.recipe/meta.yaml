@@ -23,9 +23,6 @@ requirements:
   run:
     - python
 
-conda-build:
-  output_folder: conda-bld
-
 test:
   requires:
     - pytest

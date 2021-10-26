@@ -124,7 +124,7 @@ class CMakeBuild(build_ext):
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="suneigen4py",
-    version="1.0.0",
+    version="0.0.1",
     author="Kristian Meyer",
     author_email="km@meyerct.com",
     description="A C++ wrapper with a python interface to SUNDIALS.",

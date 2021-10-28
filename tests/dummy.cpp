@@ -7,8 +7,6 @@
 
 TEST_CASE("complicated integration tests could be here")
 {
-    double* leak = new double[10];
-    std::cout << leak << std::endl;
     Dummy d;
     CHECK(d.doSomething() == true);
 }

@@ -35,10 +35,6 @@ PYBIND11_MODULE(suneigen4py, m) {
         Some other explanation about the subtract function.
     )pbdoc");
 
-#ifndef VERSION_INFO
-# define VERSION_INFO
-#endif
-
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else

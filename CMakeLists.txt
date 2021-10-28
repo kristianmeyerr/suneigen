@@ -3,12 +3,12 @@ cmake_minimum_required(VERSION 3.15)
 # Set project name, version and c++ language
 # Version numbers are available by including "config.h" in
 # the source. See config.h.in for some more details.
-project(suneigen VERSION 1.0.0 LANGUAGES CXX)
+project(suneigen)
 
 # --------------------------------------------------------------------------------
 #                         Options
 # --------------------------------------------------------------------------------
-
+#[[
 # Set options via commandline (e.g. -DENABLE_LTO=[ON|OFF])
 option(ENABLE_WARNINGS_SETTINGS "Allow target_set_warnings to add flags and defines.
                                  Set this to OFF if you want to provide your own warning parameters." ON)
@@ -18,11 +18,11 @@ option(ENABLE_DOCTESTS "Include tests in the library. Setting this to OFF will r
 option(SUNEIGEN_BUILD_PYTHON "Enable the compilation of the python module." ON)
 option(SUNEIGEN_BUILD_TESTS "Enable the compilation of the test files." ON)
 option(SUNEIGEN_BUILD_APP "Enable the compilation of the app files." ON)
-
+]]
 # --------------------------------------------------------------------------------
 #                         CMake modules
 # --------------------------------------------------------------------------------
-
+#[[
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 include(ConfigSafeGuards)
 include(Colors)
@@ -41,11 +41,11 @@ find_lto(CXX)
 
 # Find eigen library
 find_package(Eigen3 REQUIRED)
-
+]]
 # --------------------------------------------------------------------------------
 #                            Build the library
 # --------------------------------------------------------------------------------
-
+#[[
 set(LIBRARY_NAME suneigen)
 
 set(LIB_SOURCES
@@ -89,40 +89,36 @@ set_target_properties(${LIBRARY_NAME}
 if(SUNEIGEN_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
-
+]]
 # --------------------------------------------------------------------------------
 #                            Build python module
 # --------------------------------------------------------------------------------
 
-if(SUNEIGEN_BUILD_PYTHON)
+add_subdirectory(thirdparty/pybind11)
 
-    add_subdirectory(thirdparty/pybind11)
+set(PYTHON_SOURCES
+        python/main.cpp
+)
 
-    set(PYTHON_SOURCES
-            python/main.cpp
-    )
+# Compile suneigen source files into a Python module
+pybind11_add_module(suneigen4py ${PYTHON_SOURCES})
 
-    # Compile suneigen source files into a Python module
-    pybind11_add_module(suneigen4py ${PYTHON_SOURCES})
+# EXAMPLE_VERSION_INFO is defined by setup.py and passed into the C++ code as a
+# define (VERSION_INFO) here.
 
-    # EXAMPLE_VERSION_INFO is defined by setup.py and passed into the C++ code as a
-    # define (VERSION_INFO) here.
-    target_compile_definitions(suneigen4py PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
 
-    set_target_properties(suneigen4py
-        PROPERTIES
-            CXX_STANDARD 17
-            CXX_STANDARD_REQUIRED YES
-            CXX_EXTENSIONS NO
-    )
-
-endif()
+set_target_properties(suneigen4py
+    PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED YES
+        CXX_EXTENSIONS NO
+)
 
 
 # --------------------------------------------------------------------------------
 #                            Build the c++ application
 # --------------------------------------------------------------------------------
-
+#[[
 if(SUNEIGEN_BUILD_APP)
 
     set(APP_SOURCES
@@ -171,3 +167,4 @@ if (Eigen3_FOUND)
     message("  Version: ${EIGEN_VERSION}")
     message("  Include dir: ${EIGEN_INCLUDE_DIRS}")
 endif()
+]]

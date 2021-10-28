@@ -56,7 +56,7 @@ class CMakeBuild(build_ext):
 
         # In this example, we pass in the version to C++. You might not need to.
         cmake_args += [
-            "-DEXAMPLE_VERSION_INFO={}".format(self.distribution.get_version())
+            "-DVERSION_INFO={}".format(self.distribution.get_version())
         ]
 
         if self.compiler.compiler_type != "msvc":

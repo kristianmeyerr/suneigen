@@ -29,7 +29,5 @@ add_test(
         COMMAND ${TEST_MAIN} ${TEST_RUNNER_PARAMS}
 )
 
-
-
 # Adds a 'coverage' target.
 include(CodeCoverage)

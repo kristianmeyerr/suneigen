@@ -103,9 +103,9 @@ set(PYTHON_SOURCES
 # Compile suneigen source files into a Python module
 pybind11_add_module(suneigen4py ${PYTHON_SOURCES})
 
-# EXAMPLE_VERSION_INFO is defined by setup.py and passed into the C++ code as a
+# SETUP_VERSION_INFO is defined by setup.py and passed into the C++ code as a
 # define (VERSION_INFO) here.
-
+target_compile_definitions(suneigen4py PRIVATE VERSION_INFO=${SETUP_VERSION_INFO})
 
 set_target_properties(suneigen4py
     PROPERTIES

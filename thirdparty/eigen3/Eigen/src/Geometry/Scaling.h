@@ -10,7 +10,7 @@
 #ifndef EIGEN_SCALING_H
 #define EIGEN_SCALING_H
 
-namespace Eigen { 
+namespace Eigen {
 
 /** \geometry_module \ingroup Geometry_Module
   *
@@ -77,8 +77,8 @@ public:
   /** Concatenates a uniform scaling and an affine transformation */
   template<int Dim, int Mode, int Options>
   inline typename
-	internal::uniformscaling_times_affine_returntype<Scalar,Dim,Mode>::type
-	operator* (const Transform<Scalar, Dim, Mode, Options>& t) const
+    internal::uniformscaling_times_affine_returntype<Scalar,Dim,Mode>::type
+    operator* (const Transform<Scalar, Dim, Mode, Options>& t) const
   {
     typename internal::uniformscaling_times_affine_returntype<Scalar,Dim,Mode>::type res = t;
     res.prescale(factor());

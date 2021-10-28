@@ -33,6 +33,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
+        with:
+          submodules: true
 
       - name: Configure (${{ matrix.configuration }})
         run: cmake -S . -Bbuild -DCMAKE_BUILD_TYPE=${{ matrix.configuration }}
@@ -67,6 +69,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
+        with:
+          submodules: true
 
       - name: Install dependencies
         run: |

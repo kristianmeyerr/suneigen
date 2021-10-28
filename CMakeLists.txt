@@ -40,7 +40,7 @@ find_lto(CXX)
 # --------------------------------------------------------------------------------
 
 # Find eigen library
-find_package(Eigen3 3.3 REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 # --------------------------------------------------------------------------------
 #                            Build the library
@@ -149,4 +149,25 @@ if(SUNEIGEN_BUILD_APP)
             CXX_EXTENSIONS NO
         )
 
+endif()
+
+# ---------------------------------------------------
+#   Summarize the build
+# ---------------------------------------------------
+
+message("")
+message("------------------------------- Summary -------------------------------")
+message("C++ compiler name: ${CMAKE_CXX_COMPILER_ID} at ${CMAKE_CXX_COMPILER}")
+message("Build type: ${CMAKE_BUILD_TYPE}")
+message("Source dir: ${CMAKE_SOURCE_DIR}")
+message("Binary dir: ${CMAKE_BINARY_DIR}")
+message("Install dir: ${CMAKE_INSTALL_PREFIX}")
+message("C Flags: ${CMAKE_C_FLAGS}")
+message("C++ Flags: ${CMAKE_CXX_FLAGS}")
+message("----------------------------- Dependencies ----------------------------")
+
+message("Found Eigen3: ${Eigen3_FOUND}")
+if (Eigen3_FOUND)
+    message("  Version: ${EIGEN_VERSION}")
+    message("  Include dir: ${EIGEN_INCLUDE_DIRS}")
 endif()

@@ -54,7 +54,7 @@ jobs:
     strategy:
       matrix:
         toolchain:
-          - macos-clang
+          - linux-gcc
 
         configuration:
           - Debug

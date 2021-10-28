@@ -1,5 +1,10 @@
 include README.md LICENSE pybind11/LICENSE
 graft thirdparty/pybind11/include
 graft thirdparty/pybind11/tools
+graft thirdparty/eigen3
 graft python
+graft include
+graft src
+graft app
+graft tests
 global-include CMakeLists.txt *.cmake

@@ -37,9 +37,10 @@ find_lto(CXX)
 # --------------------------------------------------------------------------------
 #                         Thirdparty dependencies
 # --------------------------------------------------------------------------------
-
+set(t t)
 include(Doctest)
 find_package(Eigen3 3.4 REQUIRED)
+find_package(SUNDIALS 5.8 REQUIRED COMPONENTS sundials_cvodes sundials_nvecserial)
 
 # --------------------------------------------------------------------------------
 #                            Build the library
@@ -68,6 +69,8 @@ target_link_libraries(${LIBRARY_NAME}
     PUBLIC
         doctest
         Eigen3::Eigen
+        SUNDIALS::sundials_cvodes
+        SUNDIALS::sundials_nvecserial
 )
 
 # Set the compile options you want (change as needed).
@@ -82,7 +85,7 @@ set_target_properties(${LIBRARY_NAME}
 )
 
 # --------------------------------------------------------------------------------
-#                            Build tests
+#                            Build Library tests
 # --------------------------------------------------------------------------------
 
 if(SUNEIGEN_BUILD_TESTS)
@@ -119,7 +122,7 @@ endif()
 # --------------------------------------------------------------------------------
 #                            Build the c++ application
 # --------------------------------------------------------------------------------
-#[[
+
 if(SUNEIGEN_BUILD_APP)
 
     set(APP_SOURCES
@@ -147,5 +150,3 @@ if(SUNEIGEN_BUILD_APP)
         )
 
 endif()
-
-]]

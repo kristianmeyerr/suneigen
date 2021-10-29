@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-# Set project name, version and c++ language
-# Version numbers are available by including "config.h" in
-# the source. See config.h.in for some more details.
-project(suneigen)
+project(SUNEIGEN VERSION 0.0.1 LANGUAGES CXX)
 
 # --------------------------------------------------------------------------------
 #                         Options
@@ -24,10 +21,12 @@ option(SUNEIGEN_BUILD_APP "Enable the compilation of the app files." ON)
 # --------------------------------------------------------------------------------
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
-include(ConfigSafeGuards)
-include(Colors)
+
+# Configure the project for testing with CTest
 include(CTest)
-include(Doctest)
+
+# Include custom modules
+include(ConfigSafeGuards)
 include(LTO)
 include(Misc)
 include(Warnings)
@@ -39,13 +38,13 @@ find_lto(CXX)
 #                         Thirdparty dependencies
 # --------------------------------------------------------------------------------
 
-# Find eigen library
+include(Doctest)
 find_package(Eigen3 3.4 REQUIRED)
 
 # --------------------------------------------------------------------------------
 #                            Build the library
 # --------------------------------------------------------------------------------
-#[[
+
 set(LIBRARY_NAME suneigen)
 
 set(LIB_SOURCES
@@ -55,7 +54,7 @@ set(LIB_SOURCES
 # Compile all sources into a library.
 add_library(${LIBRARY_NAME} OBJECT ${LIB_SOURCES})
 
-# Add an alias autodiff::autodiff to the target library autodiff
+# Add an alias suneigen::suneigen to the target library suneigen
 add_library(${LIBRARY_NAME}::${LIBRARY_NAME} ALIAS ${LIBRARY_NAME})
 
 # Lib needs its header files, and users of the library must also see these (PUBLIC).
@@ -64,7 +63,7 @@ target_include_directories(${LIBRARY_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 # Install suneigen interface library
 install(TARGETS ${LIBRARY_NAME} DESTINATION bin)
 
-# There's also (probably) doctests within the library, so we need to see this as well.
+# Link libraries used.
 target_link_libraries(${LIBRARY_NAME}
     PUBLIC
         doctest
@@ -89,7 +88,7 @@ set_target_properties(${LIBRARY_NAME}
 if(SUNEIGEN_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
-]]
+
 # --------------------------------------------------------------------------------
 #                            Build python module
 # --------------------------------------------------------------------------------
@@ -148,25 +147,3 @@ if(SUNEIGEN_BUILD_APP)
         )
 
 endif()
-
-# ---------------------------------------------------
-#   Summarize the build
-# ---------------------------------------------------
-
-message("")
-message("------------------------------- Summary -------------------------------")
-message("C++ compiler name: ${CMAKE_CXX_COMPILER_ID} at ${CMAKE_CXX_COMPILER}")
-message("Build type: ${CMAKE_BUILD_TYPE}")
-message("Source dir: ${CMAKE_SOURCE_DIR}")
-message("Binary dir: ${CMAKE_BINARY_DIR}")
-message("Install dir: ${CMAKE_INSTALL_PREFIX}")
-message("C Flags: ${CMAKE_C_FLAGS}")
-message("C++ Flags: ${CMAKE_CXX_FLAGS}")
-message("----------------------------- Dependencies ----------------------------")
-
-message("Found Eigen3: ${Eigen3_FOUND}")
-if (Eigen3_FOUND)
-    message("  Version: ${EIGEN_VERSION}")
-    message("  Include dir: ${EIGEN_INCLUDE_DIRS}")
-endif()
-]]

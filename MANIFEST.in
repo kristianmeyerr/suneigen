@@ -7,4 +7,5 @@ graft include
 graft src
 graft app
 graft tests
+graft cmake/
 global-include CMakeLists.txt *.cmake

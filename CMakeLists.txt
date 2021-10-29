@@ -8,7 +8,7 @@ project(suneigen)
 # --------------------------------------------------------------------------------
 #                         Options
 # --------------------------------------------------------------------------------
-#[[
+
 # Set options via commandline (e.g. -DENABLE_LTO=[ON|OFF])
 option(ENABLE_WARNINGS_SETTINGS "Allow target_set_warnings to add flags and defines.
                                  Set this to OFF if you want to provide your own warning parameters." ON)
@@ -18,11 +18,11 @@ option(ENABLE_DOCTESTS "Include tests in the library. Setting this to OFF will r
 option(SUNEIGEN_BUILD_PYTHON "Enable the compilation of the python module." ON)
 option(SUNEIGEN_BUILD_TESTS "Enable the compilation of the test files." ON)
 option(SUNEIGEN_BUILD_APP "Enable the compilation of the app files." ON)
-]]
+
 # --------------------------------------------------------------------------------
 #                         CMake modules
 # --------------------------------------------------------------------------------
-#[[
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 include(ConfigSafeGuards)
 include(Colors)
@@ -40,8 +40,8 @@ find_lto(CXX)
 # --------------------------------------------------------------------------------
 
 # Find eigen library
-find_package(Eigen3 REQUIRED)
-]]
+find_package(Eigen3 3.4 REQUIRED)
+
 # --------------------------------------------------------------------------------
 #                            Build the library
 # --------------------------------------------------------------------------------
@@ -94,26 +94,28 @@ endif()
 #                            Build python module
 # --------------------------------------------------------------------------------
 
-add_subdirectory(thirdparty/pybind11)
+if(SUNEIGEN_BUILD_PYTHON)
 
-set(PYTHON_SOURCES
-        python/main.cpp
-)
+    add_subdirectory(thirdparty/pybind11)
 
-# Compile suneigen source files into a Python module
-pybind11_add_module(suneigen4py ${PYTHON_SOURCES})
+    set(PYTHON_SOURCES
+            python/main.cpp
+    )
 
-# SETUP_VERSION_INFO is defined by setup.py and passed into the C++ code as a
-# define (VERSION_INFO) here.
-target_compile_definitions(suneigen4py PRIVATE VERSION_INFO=${SETUP_VERSION_INFO})
+    # Compile suneigen source files into a Python module
+    pybind11_add_module(suneigen4py ${PYTHON_SOURCES})
 
-set_target_properties(suneigen4py
-    PROPERTIES
-        CXX_STANDARD 17
-        CXX_STANDARD_REQUIRED YES
-        CXX_EXTENSIONS NO
-)
+    # SETUP_VERSION_INFO is defined by setup.py and passed into the C++ code as a
+    # define (VERSION_INFO) here.
+    target_compile_definitions(suneigen4py PRIVATE VERSION_INFO=${SETUP_VERSION_INFO})
 
+    set_target_properties(suneigen4py
+        PROPERTIES
+            CXX_STANDARD 17
+            CXX_STANDARD_REQUIRED YES
+            CXX_EXTENSIONS NO
+    )
+endif()
 
 # --------------------------------------------------------------------------------
 #                            Build the c++ application

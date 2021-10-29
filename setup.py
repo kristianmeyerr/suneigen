@@ -120,8 +120,6 @@ class CMakeBuild(build_ext):
         )
 
 
-# The information here can also be placed in setup.cfg - better separation of
-# logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="suneigen4py",
     version="0.0.1",

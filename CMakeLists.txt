@@ -49,8 +49,8 @@ find_package(SUNDIALS 5.8 REQUIRED COMPONENTS sundials_cvodes sundials_nvecseria
 set(LIBRARY_NAME suneigen)
 
 set(LIB_SOURCES
-        src/example.cpp
-)
+        src/NVectorEigen.cpp
+        )
 
 # Compile all sources into a library.
 add_library(${LIBRARY_NAME} OBJECT ${LIB_SOURCES})

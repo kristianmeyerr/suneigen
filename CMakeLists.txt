@@ -147,3 +147,5 @@ if(SUNEIGEN_BUILD_APP)
         )
 
 endif()
+
+]]

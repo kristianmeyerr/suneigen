@@ -17,7 +17,8 @@ make=${MAKE:-make}
 mkdir -p "${SUNDIALS_BUILD_PATH}"
 cd "${SUNDIALS_BUILD_PATH}" || exit
 
-# Install sundials
+#   -DSUNDIALS_INDEX_SIZE=32 \
+# Install sundials with 32 bit index integers as used in Eigen.
 ${cmake} \
   -DCMAKE_INSTALL_PREFIX="${SUNDIALS_INSTALL_PATH}" \
   -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \

@@ -75,6 +75,7 @@ function(target_set_warnings)
                 if ("${CMAKE_CXX_SIMULATE_ID}" STREQUAL "MSVC") # clang-cl has some VCC flags by default that it will not recognize...
                     list(APPEND WarningFlags -Wno-unused-command-line-argument)
                 endif()
+            list(APPEND WarningFlags -Wno-poison-system-directories)  # find_package will locate varying os paths
             endif(WCLANG)
         endif()
     endif()

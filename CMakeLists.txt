@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 project(SUNEIGEN VERSION 0.0.1 LANGUAGES CXX)
 
@@ -37,10 +37,14 @@ find_lto(CXX)
 # --------------------------------------------------------------------------------
 #                         Thirdparty dependencies
 # --------------------------------------------------------------------------------
-set(t t)
+
 include(Doctest)
 find_package(Eigen3 3.4 REQUIRED)
 find_package(SUNDIALS 5.8 REQUIRED COMPONENTS sundials_cvodes sundials_nvecserial)
+find_package(Hana REQUIRED)
+set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/gsl/")
+
+#add_definitions(-DEIGEN_DEFAULT_DENSE_INDEX_TYPE=long)
 
 # --------------------------------------------------------------------------------
 #                            Build the library
@@ -49,8 +53,11 @@ find_package(SUNDIALS 5.8 REQUIRED COMPONENTS sundials_cvodes sundials_nvecseria
 set(LIBRARY_NAME suneigen)
 
 set(LIB_SOURCES
-        src/NVectorEigen.cpp
-        )
+        src/sunlinsol_superlu.cpp
+        src/solver.cpp
+        src/solver_cvodes.cpp
+        src/misc.cpp
+        src/suneigen_exception.cpp)
 
 # Compile all sources into a library.
 add_library(${LIBRARY_NAME} OBJECT ${LIB_SOURCES})
@@ -59,7 +66,10 @@ add_library(${LIBRARY_NAME} OBJECT ${LIB_SOURCES})
 add_library(${LIBRARY_NAME}::${LIBRARY_NAME} ALIAS ${LIBRARY_NAME})
 
 # Lib needs its header files, and users of the library must also see these (PUBLIC).
-target_include_directories(${LIBRARY_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(${LIBRARY_NAME}
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/include
+        ${GSL_LITE_INCLUDE_DIR})
 
 # Install suneigen interface library
 install(TARGETS ${LIBRARY_NAME} DESTINATION bin)
@@ -135,6 +145,7 @@ if(SUNEIGEN_BUILD_APP)
         PRIVATE
             ${LIBRARY_NAME}
             Eigen3::Eigen
+            hana
     )
 
     target_set_warnings(app ENABLE ALL AS_ERROR ALL DISABLE Annoying)

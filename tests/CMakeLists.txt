@@ -2,12 +2,20 @@
 # List all files containing tests.
 set(TESTFILES
         main.cpp
-        dummy.cpp
+        test_sunlinsol_superlu.cpp
 )
 
 # Make unit_tests target
 add_executable(unit_tests ${TESTFILES})
-target_link_libraries(unit_tests PRIVATE ${LIBRARY_NAME} doctest)
+
+target_link_libraries(unit_tests
+    PRIVATE
+        ${LIBRARY_NAME}
+        doctest
+        Eigen3::Eigen
+        hana
+)
+
 set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 target_set_warnings(unit_tests ENABLE ALL AS_ERROR ALL DISABLE Annoying)
 

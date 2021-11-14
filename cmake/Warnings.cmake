@@ -76,6 +76,8 @@ function(target_set_warnings)
                     list(APPEND WarningFlags -Wno-unused-command-line-argument)
                 endif()
             list(APPEND WarningFlags -Wno-poison-system-directories)  # find_package will locate varying os paths
+            list(APPEND WarningFlags -Wno-weak-vtables)  # Third-party gsl has weak-vtables.
+            list(APPEND WarningFlags -Wno-float-equal) # Non-sense warning
             endif(WCLANG)
         endif()
     endif()

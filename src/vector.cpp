@@ -4,9 +4,11 @@
 
 namespace suneigen {
 
-    Vector &Vector::operator=(Vector const &other) {
-        vec_ = other.vec_;
-        synchroniseNVector();
+    Vector &Vector::operator=(const Vector& other) {
+        if (this != &other){  // not a self-assignment
+            vec_ = other.vec_;
+            synchroniseNVector();
+        }
         return *this;
     }
 
@@ -20,27 +22,27 @@ namespace suneigen {
 
     std::vector<realtype> const &Vector::getVector() const { return vec_; }
 
-    int Vector::getLength() const { return static_cast<int>(vec_.size()); }
+    size_t Vector::getLength() const { return vec_.size(); }
 
     void Vector::zero() { set(0.0); }
 
     void Vector::minus() {
         std::transform(vec_.begin(), vec_.end(),
-                       vec_.begin(), std::negate<realtype>());
+                       vec_.begin(), std::negate<>());
     }
 
     void Vector::set(realtype val) { std::fill(vec_.begin(), vec_.end(), val); }
 
-    realtype &Vector::operator[](int pos) {
-        return vec_.at(static_cast<decltype(vec_)::size_type>(pos));
+    realtype &Vector::operator[](size_t pos) {
+        return vec_.at(pos);
     }
 
-    realtype &Vector::at(int pos) {
-        return vec_.at(static_cast<decltype(vec_)::size_type>(pos));
+    realtype &Vector::at(size_t pos) {
+        return vec_.at(pos);
     }
 
-    const realtype &Vector::at(int pos) const {
-        return vec_.at(static_cast<decltype(vec_)::size_type>(pos));
+    const realtype &Vector::at(size_t pos) const {
+        return vec_.at(pos);
     }
 
     void Vector::copy(const Vector &other) {
@@ -63,60 +65,61 @@ namespace suneigen {
             N_VDestroy_Serial(nvec_);
     }
 
-    VectorArray::VectorArray(long int length_inner, long int length_outer)
+    VectorArray::VectorArray(size_t length_inner, size_t length_outer)
             : vec_array_(length_outer, Vector(length_inner)) {
         nvec_array_.resize(length_outer);
-        for (int idx = 0; idx < length_outer; idx++) {
+        for (size_t idx = 0; idx < length_outer; idx++) {
+            nvec_array_.at(idx) = vec_array_.at(idx).getNVector();
+        }
+    }
+
+    VectorArray::VectorArray(const VectorArray& other)
+            : vec_array_(other.vec_array_) {
+        nvec_array_.resize(other.getLength());
+        for (unsigned int idx = 0; idx < other.getLength(); idx++) {
             nvec_array_.at(idx) = vec_array_.at(idx).getNVector();
         }
     }
 
     VectorArray &VectorArray::operator=(VectorArray const &other) {
-        vec_array_ = other.vec_array_;
-        nvec_array_.resize(other.getLength());
-        for (int idx = 0; idx < other.getLength(); idx++) {
-            nvec_array_.at(idx) = vec_array_.at(idx).getNVector();
+        if (this != &other) {  // not a self-assignment
+            vec_array_ = other.vec_array_;
+            nvec_array_.resize(other.getLength());
+            for (unsigned int idx = 0; idx < other.getLength(); idx++) {
+                nvec_array_.at(idx) = vec_array_.at(idx).getNVector();
+            }
         }
         return *this;
     }
 
-    VectorArray::VectorArray(const VectorArray &vaold)
-            : vec_array_(vaold.vec_array_) {
-        nvec_array_.resize(static_cast<unsigned long>(vaold.getLength()));
-        auto n = static_cast<unsigned long>(vaold.getLength());
-        for (unsigned long idx = 0; idx < n; idx++) {
-            nvec_array_.at(idx) = vec_array_.at(idx).getNVector();
-        }
+    realtype *VectorArray::data(size_t pos) { return vec_array_.at(pos).data(); }
+
+    const realtype *VectorArray::data(size_t pos) const {
+        return vec_array_.at(pos).data();
     }
 
-    realtype *VectorArray::data(int pos) { return vec_array_.at(static_cast<unsigned long>(pos)).data(); }
-
-    const realtype *VectorArray::data(int pos) const {
-        return vec_array_.at(static_cast<unsigned long>(pos)).data();
+    realtype &VectorArray::at(size_t ipos, size_t jpos) {
+        return vec_array_.at(jpos).at(ipos);
     }
 
-    realtype &VectorArray::at(int ipos, int jpos) {
-        return vec_array_.at(static_cast<unsigned long>(jpos)).at(ipos);
-    }
-
-    const realtype &VectorArray::at(int ipos, size_t jpos) const {
+    const realtype &VectorArray::at(size_t ipos, size_t jpos) const {
         return vec_array_.at(jpos).at(ipos);
     }
 
     N_Vector *VectorArray::getNVectorArray() { return nvec_array_.data(); }
 
-    N_Vector VectorArray::getNVector(int pos) { return nvec_array_.at(static_cast<unsigned long>(pos)); }
+    N_Vector VectorArray::getNVector(size_t pos) { return nvec_array_.at(pos); }
 
-    const_N_Vector VectorArray::getNVector(int pos) const { return nvec_array_.at(static_cast<unsigned long>(pos)); }
+    const_N_Vector VectorArray::getNVector(size_t pos) const { return nvec_array_.at(pos); }
 
-    Vector &VectorArray::operator[](int pos) { return vec_array_.at(static_cast<unsigned long>(pos)); }
+    Vector &VectorArray::operator[](size_t pos) { return vec_array_.at(pos); }
 
-    const Vector &VectorArray::operator[](int pos) const {
-        return vec_array_.at(static_cast<unsigned long>(pos));
+    const Vector &VectorArray::operator[](size_t pos) const {
+        return vec_array_.at(pos);
     }
 
-    int VectorArray::getLength() const {
-        return static_cast<int>(vec_array_.size());
+    size_t VectorArray::getLength() const {
+        return vec_array_.size();
     }
 
     void VectorArray::zero() {
@@ -130,7 +133,7 @@ namespace suneigen {
         if (n_outer == 0)
             return; // nothing to do ...
 
-        auto n_inner = static_cast<size_t>(vec_array_.at(0).getLength());
+        size_t n_inner = vec_array_.at(0).getLength();
 
         if (vec.size() != n_inner * n_outer) {
             throw SunException("Dimension of VectorArray (%ix%i) does not "
@@ -138,9 +141,9 @@ namespace suneigen {
                                n_inner, n_outer, vec.size());
         }
 
-        for (size_t outer = 0; outer < n_outer; ++outer) {
-            for (size_t inner = 0; inner < n_inner; ++inner)
-                vec.at(inner + outer * n_inner)  =static_cast<size_t>(this->at(inner, outer));
+        for (unsigned int outer = 0; outer < n_outer; ++outer) {
+            for (unsigned int inner = 0; inner < n_inner; ++inner)
+                vec.at(inner + outer * n_inner) = this->at(inner, outer);
         }
     }
 
@@ -150,10 +153,11 @@ namespace suneigen {
                                "match input dimension (%i)",
                                getLength(), other.getLength());
 
-        for (int iv = 0; iv < getLength(); ++iv) {
+        for (unsigned int iv = 0; iv < getLength(); ++iv) {
             vec_array_.at(iv).copy(other.vec_array_.at(iv));
             nvec_array_[iv] = vec_array_.at(iv).getNVector();
         }
     }
 
-} // namespace amici
+
+} // namespace suneigen

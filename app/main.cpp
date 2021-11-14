@@ -1,36 +1,34 @@
 #include <iostream>
 
-#define EIGEN_DEFAULT_DENSE_INDEX_TYPE long
-
-#include<Eigen/SparseLU>
-#include <random>
-#include <sunmatrix/sunmatrix_dense.h>
-#include <sunmatrix/sunmatrix_sparse.h>
-#include <sundials/sundials_types.h>
-#include <sundials/sundials_math.h>
-#include <nvector/nvector_serial.h>
-#include <typeinfo>
-
-#include <sunlinsol_superlu.h>
-
-#include <boost/hana.hpp>
-namespace hana = boost::hana;
-
-using namespace::std;
-using namespace Eigen;
-
-#include "solver_cvodes.h"
-
-class Model {
-public:
-    int x = 1;
-    int add(int a){
-        return a + x;
-    }
-};
+#include "model_robertson.h"
+#include "suneigen.h"
 
 int main() {
 
+    // Create a model instance
+    auto model = suneigen::generic_model::getModel();
+
+    // Set desired output timepoints
+    model->setTimepoints({4.0e1, 4.0e2});
+
+    // Create a solver instance
+    auto solver = model->getSolver();
+
+    // Optionally set integration tolerance
+    solver->setAbsoluteTolerance(1e-12);
+    solver->setRelativeTolerance(1e-8);
+
+    // Create an application instance
+    auto app = suneigen::SunApplication();
+
+    // Run the simulation
+    auto rdata = app.runSimulation(*solver,*model);
+
+    for (unsigned int i = 0; i < model->getTimepoints().size(); ++i) {
+        std::cout << rdata->x[i] << " " << rdata->x[i + 1] << " " << rdata->x[i + 2] << std::endl;
+    }
+
+    /*
 
     const int n = 3;
     SUNMatrix A_dense = SUNDenseMatrix(n, n);
@@ -84,7 +82,7 @@ int main() {
 
     cout << typeid(sunindextype).name() << endl;
 
-
+    */
 
     /*
     // fill b

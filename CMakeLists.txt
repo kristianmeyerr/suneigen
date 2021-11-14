@@ -44,8 +44,6 @@ find_package(SUNDIALS 5.8 REQUIRED COMPONENTS sundials_cvodes sundials_nvecseria
 find_package(Hana REQUIRED)
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/gsl/")
 
-#add_definitions(-DEIGEN_DEFAULT_DENSE_INDEX_TYPE=long)
-
 # --------------------------------------------------------------------------------
 #                            Build the library
 # --------------------------------------------------------------------------------
@@ -57,7 +55,9 @@ set(LIB_SOURCES
         src/solver.cpp
         src/solver_cvodes.cpp
         src/misc.cpp
-        src/suneigen_exception.cpp)
+        src/vector.cpp
+        src/exception.cpp
+        src/model.cpp src/model_ode.cpp include/model_ode.h src/suneigen.cpp include/suneigen.h src/return_data.cpp include/return_data.h src/forward_problem.cpp include/forward_problem.h src/sundials_matrix_wrapper.cpp include/sundials_matrix_wrapper.h src/sundials_linsol_wrapper.cpp include/sundials_linsol_wrapper.h include/model_state.h src/model_state.cpp)
 
 # Compile all sources into a library.
 add_library(${LIBRARY_NAME} OBJECT ${LIB_SOURCES})
@@ -69,7 +69,9 @@ add_library(${LIBRARY_NAME}::${LIBRARY_NAME} ALIAS ${LIBRARY_NAME})
 target_include_directories(${LIBRARY_NAME}
     PUBLIC
         ${PROJECT_SOURCE_DIR}/include
-        ${GSL_LITE_INCLUDE_DIR})
+        ${GSL_LITE_INCLUDE_DIR}
+        ${PROJECT_SOURCE_DIR}/thirdparty/sundials/src  # This is needed for cvodes/cvodes_impl.h
+)
 
 # Install suneigen interface library
 install(TARGETS ${LIBRARY_NAME} DESTINATION bin)
@@ -112,14 +114,25 @@ if(SUNEIGEN_BUILD_PYTHON)
 
     set(PYTHON_SOURCES
             python/main.cpp
+            python/py_model_ode.cpp
     )
 
     # Compile suneigen source files into a Python module
     pybind11_add_module(suneigen4py ${PYTHON_SOURCES})
 
+    # Link autodiff against autodiff C++ library
+    target_link_libraries(suneigen4py
+        PRIVATE
+            ${LIBRARY_NAME}
+            Eigen3::Eigen
+    )
+
     # SETUP_VERSION_INFO is defined by setup.py and passed into the C++ code as a
     # define (VERSION_INFO) here.
-    target_compile_definitions(suneigen4py PRIVATE VERSION_INFO=${SETUP_VERSION_INFO})
+    target_compile_definitions(suneigen4py
+        PRIVATE
+            VERSION_INFO=${SETUP_VERSION_INFO}
+    )
 
     set_target_properties(suneigen4py
         PROPERTIES
@@ -137,7 +150,7 @@ if(SUNEIGEN_BUILD_APP)
 
     set(APP_SOURCES
             app/main.cpp
-    )
+            include/abstract_model.h app/model_robertson.cpp app/model_robertson.h include/model_dimensions.h)
 
     add_executable(app ${APP_SOURCES})
 

@@ -3,6 +3,8 @@
 set(TESTFILES
         main.cpp
         test_sunlinsol_superlu.cpp
+        cvsRoberts_dns.cpp
+        model_robertson.cpp
 )
 
 # Make unit_tests target
@@ -16,10 +18,17 @@ target_link_libraries(unit_tests
         hana
 )
 
-set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-target_set_warnings(unit_tests ENABLE ALL AS_ERROR ALL DISABLE Annoying)
+set_target_properties(unit_tests
+    PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
+)
+target_set_warnings(unit_tests
+        ENABLE ALL
+        AS_ERROR ALL
+        DISABLE Annoying
+)
 
-set_target_properties(${TEST_MAIN} PROPERTIES
+set_target_properties(unit_tests PROPERTIES
         CXX_STANDARD 17
         CXX_STANDARD_REQUIRED YES
         CXX_EXTENSIONS NO

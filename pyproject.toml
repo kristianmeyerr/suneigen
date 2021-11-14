@@ -6,3 +6,18 @@ requires = [
     "cmake>=3.15",
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = ["-ra", "--showlocals", "--strict-markers", "--strict-config"]
+xfail_strict = true
+filterwarnings = ["error"]
+testpaths = ["tests/python/"]
+
+[tool.cibuildwheel]
+test-command = "pytest {project}/tests/python"
+test-extras = ["test"]
+test-skip = ["*universal2:arm64"]

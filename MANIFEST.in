@@ -1,7 +1,8 @@
-include README.md LICENSE pybind11/LICENSE
+include README.md LICENSE pybind11/LICENSE gsl/LICENSE sundials/LICENSE
+graft thirdparty/eigen3/
 graft thirdparty/pybind11/include/
 graft thirdparty/pybind11/tools/
-graft thirdparty/eigen3/
+graft thirdparty/gsl/
 graft thirdparty/sundials/
 graft python/
 graft include/

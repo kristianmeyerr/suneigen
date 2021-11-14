@@ -4,7 +4,7 @@
 #include <vector>
 #include <type_traits>
 
-#include <suneigen_exception.h>
+#include <exception.h>
 
 #include <nvector/nvector_serial.h>
 
@@ -13,8 +13,7 @@
 namespace suneigen {
 
     /** Since const N_Vector is not what we want */
-    using const_N_Vector =
-    std::add_const_t<typename std::remove_pointer_t<N_Vector>> *;
+    using const_N_Vector = std::add_const_t<typename std::remove_pointer_t<N_Vector>> *;
 
     inline const realtype* N_VGetArrayPointerConst(const_N_Vector x) {
         return N_VGetArrayPointer(const_cast<N_Vector>(x));
@@ -36,9 +35,9 @@ namespace suneigen {
          * @brief empty constructor
          * @param length number of elements in vector
          */
-        explicit Vector(const int length)
-                : vec_(static_cast<decltype(vec_)::size_type>(length), 0.0),
-                  nvec_(N_VMake_Serial(length, vec_.data())) {}
+        explicit Vector(const size_t length)
+                : vec_(length, 0.0),
+                  nvec_(N_VMake_Serial(static_cast<sunindextype>(length), vec_.data())) {}
 
         /** Moves data from std::vector and constructs an nvec that points to the
          * data
@@ -47,7 +46,7 @@ namespace suneigen {
          */
         explicit Vector(std::vector<realtype> rvec)
                 : vec_(std::move(rvec)),
-                  nvec_(N_VMake_Serial(static_cast<int>(vec_.size()), vec_.data())) {}
+                  nvec_(N_VMake_Serial(static_cast<long int>(vec_.size()), vec_.data())) {}
 
         /** Copy data from gsl::span and constructs a vector
          * @brief constructor from gsl::span,
@@ -57,11 +56,16 @@ namespace suneigen {
                 : Vector(std::vector<realtype>(rvec.begin(), rvec.end())) {}
 
         /**
-         * @brief copy constructor
-         * @param vold vector from which the data will be copied
+         * @brief destructor
          */
-        Vector(const Vector &vold) : vec_(vold.vec_) {
-            nvec_ = N_VMake_Serial(static_cast<int>(vold.vec_.size()), vec_.data());
+        ~Vector();
+
+        /**
+         * @brief copy constructor
+         * @param other vector from which the data will be copied
+         */
+        Vector(const Vector& other) : vec_(other.vec_) {
+            nvec_ = N_VMake_Serial(static_cast<sunindextype>(other.vec_.size()), vec_.data());
         }
 
         /**
@@ -74,16 +78,18 @@ namespace suneigen {
         }
 
         /**
-         * @brief destructor
-         */
-        ~Vector();
-
-        /**
-         * @brief copy assignment operator
+         * @brief copy assignment
          * @param other right hand side
          * @return left hand side
          */
-        Vector &operator=(Vector const &other);
+        Vector& operator=(const Vector& other);
+
+        /**
+         * @brief move assignment
+         * @param other right hand side
+         * @return left hand side
+         */
+        // Vector& operator=(Vector&& other) noexcept = delete;
 
         /**
          * @brief data accessor
@@ -95,7 +101,7 @@ namespace suneigen {
          * @brief const data accessor
          * @return const pointer to data array
          */
-        const realtype *data() const;
+        [[nodiscard]] const realtype *data() const;
 
         /**
          * @brief N_Vector accessor
@@ -107,19 +113,19 @@ namespace suneigen {
          * @brief N_Vector accessor
          * @return N_Vector
          */
-        const_N_Vector getNVector() const;
+        [[nodiscard]] const_N_Vector getNVector() const;
 
         /**
          * @brief Vector accessor
          * @return Vector
          */
-        std::vector<realtype> const &getVector() const;
+        [[nodiscard]] std::vector<realtype> const &getVector() const;
 
         /**
          * @brief returns the length of the vector
          * @return length
          */
-        int getLength() const;
+        [[nodiscard]] size_t getLength() const;
 
         /**
          * @brief fills vector with zero values
@@ -142,20 +148,20 @@ namespace suneigen {
          * @param pos index of element
          * @return element
          */
-        realtype &operator[](int pos);
+        realtype &operator[](size_t pos);
         /**
          * @brief accessor to data elements of the vector
          * @param pos index of element
          * @return element
          */
-        realtype &at(int pos);
+        realtype &at(size_t pos);
 
         /**
          * @brief accessor to data elements of the vector
          * @param pos index of element
          * @return element
          */
-        const realtype &at(int pos) const;
+        [[nodiscard]] const realtype &at(size_t pos) const;
 
         /**
          * @brief copies data from another Vector
@@ -176,7 +182,8 @@ namespace suneigen {
         void synchroniseNVector();
     };
 
-/**
+
+    /**
  * @brief VectorArray class.
  *
  * Provides a generic interface to arrays of NVector_Serial structs
@@ -198,52 +205,55 @@ namespace suneigen {
          * @param length_inner length of vectors
          * @param length_outer number of vectors
          */
-        VectorArray(long int length_inner, long int length_outer);
+        VectorArray(size_t length_inner, size_t length_outer);
 
         /**
-         * @brief copy constructor
-         * @param vaold object to copy from
+         * @brief Default destructor
          */
-        VectorArray(const VectorArray &vaold);
-
         ~VectorArray() = default;
 
         /**
-         * @brief copy assignment operator
+         * @brief copy constructor
+         * @param other object to copy from
+         */
+        VectorArray(const VectorArray& other);
+
+        /**
+         * @brief copy assignment
          * @param other right hand side
          * @return left hand side
          */
         VectorArray &operator=(VectorArray const &other);
 
         /**
-         * @brief accessor to data of Vector elements
-         * @param pos index of Vector
+         * @brief accessor to data of AmiVector elements
+         * @param pos index of AmiVector
          * @return pointer to data array
          */
-        realtype *data(int pos);
+        realtype *data(size_t pos);
 
         /**
-         * @brief const accessor to data of Vector elements
-         * @param pos index of Vector
+         * @brief const accessor to data of AmiVector elements
+         * @param pos index of AmiVector
          * @return const pointer to data array
          */
-        const realtype *data(int pos) const;
+        [[nodiscard]] const realtype *data(size_t pos) const;
 
         /**
-         * @brief accessor to elements of Vector elements
-         * @param ipos inner index in Vector
-         * @param jpos outer index in VectorArray
+         * @brief accessor to elements of AmiVector elements
+         * @param ipos inner index in AmiVector
+         * @param jpos outer index in AmiVectorArray
          * @return element
          */
-        realtype &at(int ipos, int jpos);
+        realtype &at(size_t ipos, size_t jpos);
 
         /**
-         * @brief const accessor to elements of Vector elements
-         * @param ipos inner index in Vector
-         * @param jpos outer index in VectorArray
+         * @brief const accessor to elements of AmiVector elements
+         * @param ipos inner index in AmiVector
+         * @param jpos outer index in AmiVectorArray
          * @return element
          */
-        const realtype &at(int ipos, size_t jpos) const;
+        [[nodiscard]] const realtype &at(size_t ipos, size_t jpos) const;
 
         /**
          * @brief accessor to NVectorArray
@@ -253,52 +263,52 @@ namespace suneigen {
 
         /**
          * @brief accessor to NVector element
-         * @param pos index of corresponding Vector
+         * @param pos index of corresponding AmiVector
          * @return N_Vector
          */
-        N_Vector getNVector(int pos);
+        N_Vector getNVector(size_t pos);
 
         /**
          * @brief const accessor to NVector element
-         * @param pos index of corresponding Vector
+         * @param pos index of corresponding AmiVector
          * @return N_Vector
          */
-        const_N_Vector getNVector(int pos) const;
+        [[nodiscard]] const_N_Vector getNVector(size_t pos) const;
 
         /**
-         * @brief accessor to Vector elements
-         * @param pos index of Vector
-         * @return Vector
+         * @brief accessor to AmiVector elements
+         * @param pos index of AmiVector
+         * @return AmiVector
          */
-        Vector &operator[](int pos);
+        Vector &operator[](size_t pos);
 
         /**
-         * @brief const accessor to Vector elements
-         * @param pos index of Vector
-         * @return const Vector
+         * @brief const accessor to AmiVector elements
+         * @param pos index of AmiVector
+         * @return const AmiVector
          */
-        const Vector &operator[](int pos) const;
+        const Vector &operator[](size_t pos) const;
 
         /**
-         * @brief length of VectorArray
+         * @brief length of AmiVectorArray
          * @return length
          */
-        int getLength() const;
+        [[nodiscard]] size_t getLength() const;
 
         /**
-         * @brief set every Vector in VectorArray to zero
+         * @brief set every AmiVector in AmiVectorArray to zero
          */
         void zero();
 
         /**
-         * @brief flattens the VectorArray to a vector in row-major format
-         * @param vec vector into which the VectorArray will be flattened. Must
+         * @brief flattens the AmiVectorArray to a vector in row-major format
+         * @param vec vector into which the AmiVectorArray will be flattened. Must
          * have length equal to number of elements.
          */
         void flatten_to_vector(std::vector<realtype> &vec) const;
 
         /**
-         * @brief copies data from another VectorArray
+         * @brief copies data from another AmiVectorArray
          * @param other data source
          */
         void copy(const VectorArray &other);
@@ -314,7 +324,7 @@ namespace suneigen {
         std::vector<N_Vector> nvec_array_;
     };
 
-} // namespace amici
+} // namespace suneigen
 
 
 namespace gsl {
@@ -325,7 +335,7 @@ namespace gsl {
  */
     inline span<realtype> make_span(N_Vector nv)
     {
-        return span<realtype>(N_VGetArrayPointer(nv), N_VGetLength_Serial(nv));
+        return span<realtype>(N_VGetArrayPointer(nv), static_cast<std::size_t>(N_VGetLength_Serial(nv)));
     }
 } // namespace gsl
 

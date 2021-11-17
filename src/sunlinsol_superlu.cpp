@@ -1,7 +1,3 @@
-//
-// Created by Kristian Meyer on 03/11/2021.
-//
-
 #include "sunlinsol_superlu.h"
 #include <sundials/sundials_math.h>
 #include <iostream>

@@ -15,7 +15,7 @@ int main() {
     auto solver = model->getSolver();
 
     // Optionally set integration tolerance
-    solver->setAbsoluteTolerance(1e-12);
+    solver->setAbsoluteTolerance(1e-16);
     solver->setRelativeTolerance(1e-8);
 
     // Create an application instance
@@ -27,6 +27,29 @@ int main() {
     for (unsigned int i = 0; i < model->getTimepoints().size(); ++i) {
         std::cout << rdata->x[i] << " " << rdata->x[i + 1] << " " << rdata->x[i + 2] << std::endl;
     }
+
+    // Statistics
+    int numnonlinsolvconvfails_total = 0;
+    for (auto& n : rdata->numnonlinsolvconvfails)
+        numnonlinsolvconvfails_total += n;
+
+    int numerrtestfails_total = 0;
+    for (auto& n : rdata->numerrtestfails)
+        numerrtestfails_total += n;
+
+    int numrhsevals_total = 0;
+    for (auto& n : rdata->numrhsevals)
+        numrhsevals_total += n;
+
+    int numsteps_total = 0;
+    for (auto& n : rdata->numsteps)
+        numsteps_total += n;
+
+    std::cout << "CPU time (s): " << rdata->cpu_time << std::endl;
+    std::cout << "Number of RHS evaluations: " << numrhsevals_total << std::endl;
+    std::cout << "Number of steps used: " << numsteps_total << std::endl;
+    std::cout << "Number of nonlinear solver convergence failures: " << numnonlinsolvconvfails_total << std::endl;
+    std::cout << "Number of error test failures: " << numerrtestfails_total << std::endl;
 
     /*
 

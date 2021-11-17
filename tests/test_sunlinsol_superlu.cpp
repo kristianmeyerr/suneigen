@@ -135,4 +135,3 @@ TEST_CASE("Test that we can solve a linear system for CSR_MAT"){
     REQUIRE(lastflag_after==SUNLS_SUCCESS);
 
 }
-

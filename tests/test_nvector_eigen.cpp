@@ -82,7 +82,3 @@ TEST_CASE("Test clone functions"){
     N_VDestroy(Z);
 
 }
-
-
-
-

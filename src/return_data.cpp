@@ -61,7 +61,6 @@ namespace suneigen {
             processForwardProblem(*fwd, model);
         else
             invalidate(0);
-
     }
 
     void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model) {
@@ -172,5 +171,3 @@ namespace suneigen {
 
 
 }
-
-

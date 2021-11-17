@@ -68,7 +68,7 @@ namespace suneigen {
         if (t_ != model->t0() && timepoint_states_.count(t_) == 0)
             timepoint_states_[t_] = getSimulationState();
         /* store diagnosis information for debugging */
-        //solver->storeDiagnosis();
+        solver->storeDiagnosis();
     }
 
     const SimulationState& ForwardProblem::getSimulationStateTimepoint(size_t it) const {

@@ -57,7 +57,14 @@ set(LIB_SOURCES
         src/misc.cpp
         src/vector.cpp
         src/exception.cpp
-        src/model.cpp src/model_ode.cpp include/model_ode.h src/suneigen.cpp include/suneigen.h src/return_data.cpp include/return_data.h src/forward_problem.cpp include/forward_problem.h src/sundials_matrix_wrapper.cpp include/sundials_matrix_wrapper.h src/sundials_linsol_wrapper.cpp include/sundials_linsol_wrapper.h include/model_state.h src/model_state.cpp)
+        src/model.cpp
+        src/model_ode.cpp
+        src/suneigen.cpp
+        src/return_data.cpp
+        src/forward_problem.cpp
+        src/sundials_matrix_wrapper.cpp
+        src/sundials_linsol_wrapper.cpp
+        src/model_state.cpp)
 
 # Compile all sources into a library.
 add_library(${LIBRARY_NAME} OBJECT ${LIB_SOURCES})
@@ -115,6 +122,7 @@ if(SUNEIGEN_BUILD_PYTHON)
     set(PYTHON_SOURCES
             python/main.cpp
             python/py_model_ode.cpp
+            python/pycvodes.cpp
     )
 
     # Compile suneigen source files into a Python module
@@ -133,6 +141,12 @@ if(SUNEIGEN_BUILD_PYTHON)
         PRIVATE
             VERSION_INFO=${SETUP_VERSION_INFO}
     )
+
+    # The visibility flag removes a warning on Clang
+    target_compile_options(suneigen4py PRIVATE -fvisibility=default)
+
+    # Enable link-time-optimization if available for non-debug configurations
+    target_enable_lto(suneigen4py optimized)
 
     set_target_properties(suneigen4py
         PROPERTIES

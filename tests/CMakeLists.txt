@@ -15,7 +15,6 @@ target_link_libraries(unit_tests
         ${LIBRARY_NAME}
         doctest
         Eigen3::Eigen
-        hana
 )
 
 set_target_properties(unit_tests

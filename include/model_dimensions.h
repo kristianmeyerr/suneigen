@@ -19,11 +19,7 @@ namespace suneigen {
                 const size_t nx_,
                 const size_t np_,
                 const size_t nnz_)
-                : nx(nx_), np(np_), nnz(nnz_) {
-            Expects(nx >= 0);
-            Expects(np >= 0);
-            Expects(nnz >= 0);
-        }
+                : nx(nx_), np(np_), nnz(nnz_) {}
 
         /** Number of states */
         size_t nx{0};

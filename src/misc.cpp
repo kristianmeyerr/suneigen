@@ -2,10 +2,14 @@
 
 #include "misc.h"
 
+
 #include <cstdio>
+#include <cstring>
 #include <cstdlib>
-#include <string>
 #include <sstream>
+#include <cstdarg>
+#include <string>
+
 
 #if defined(_WIN32)
 #define PLATFORM_WINDOWS // Windows
@@ -23,7 +27,7 @@ namespace suneigen {
 
     void writeSlice(const Vector &s, gsl::span<realtype> b) {
         writeSlice(s.getVector(), b);
-    };
+    }
 
     // This function produces a stack backtrace with demangled function & method names.
     std::string backtraceString(int skip)

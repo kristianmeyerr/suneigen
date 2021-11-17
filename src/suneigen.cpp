@@ -6,6 +6,7 @@
 #include <sundials/sundials_types.h> //realtype
 
 #include <iostream>
+#include <cstdarg>
 #include <memory>
 
 // ensure definitions are in sync

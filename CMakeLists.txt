@@ -16,6 +16,8 @@ option(SUNEIGEN_BUILD_PYTHON "Enable the compilation of the python module." ON)
 option(SUNEIGEN_BUILD_TESTS "Enable the compilation of the test files." ON)
 option(SUNEIGEN_BUILD_APP "Enable the compilation of the app files." ON)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # --------------------------------------------------------------------------------
 #                         CMake modules
 # --------------------------------------------------------------------------------
@@ -37,11 +39,9 @@ find_lto(CXX)
 # --------------------------------------------------------------------------------
 #                         Thirdparty dependencies
 # --------------------------------------------------------------------------------
-
 include(Doctest)
 find_package(Eigen3 3.4 REQUIRED)
 find_package(SUNDIALS 5.8 REQUIRED COMPONENTS sundials_cvodes sundials_nvecserial)
-find_package(Hana REQUIRED)
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/gsl/")
 
 # --------------------------------------------------------------------------------
@@ -90,6 +90,7 @@ target_link_libraries(${LIBRARY_NAME}
         Eigen3::Eigen
         SUNDIALS::sundials_cvodes
         SUNDIALS::sundials_nvecserial
+        ${CMAKE_DL_LIBS}  # for dladdr function
 )
 
 # Set the compile options you want (change as needed).
@@ -142,8 +143,11 @@ if(SUNEIGEN_BUILD_PYTHON)
             VERSION_INFO=${SETUP_VERSION_INFO}
     )
 
-    # The visibility flag removes a warning on Clang
-    target_compile_options(suneigen4py PRIVATE -fvisibility=default)
+    # https://pybind11.readthedocs.io/en/stable/faq.html#someclass-declared-with-greater-visibility-than-the-type-of-its-field-someclass-member-wattributes
+    target_compile_options(suneigen4py
+        PRIVATE
+            -fvisibility=hidden
+    )
 
     # Enable link-time-optimization if available for non-debug configurations
     target_enable_lto(suneigen4py optimized)
@@ -172,7 +176,6 @@ if(SUNEIGEN_BUILD_APP)
         PRIVATE
             ${LIBRARY_NAME}
             Eigen3::Eigen
-            hana
     )
 
     target_set_warnings(app ENABLE ALL AS_ERROR ALL DISABLE Annoying)

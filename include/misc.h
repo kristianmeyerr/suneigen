@@ -69,7 +69,7 @@ namespace suneigen {
     void writeSlice(const gsl::span<const T> slice, gsl::span<T> buffer) {
         checkBufferSize(buffer, slice.size());
         std::copy(slice.begin(), slice.end(), buffer.data());
-    };
+    }
 
     /**
      * @brief local helper function to write computed slice to provided buffer (vector)
@@ -80,7 +80,7 @@ namespace suneigen {
     void writeSlice(const std::vector<T> &s, std::vector<T> &b) {
         writeSlice(gsl::make_span(s.data(), s.size()),
                    gsl::make_span(b.data(), b.size()));
-    };
+    }
 
     /**
      * @brief local helper function to write computed slice to provided buffer (vector/span)
@@ -90,7 +90,7 @@ namespace suneigen {
     template <class T>
     void writeSlice(const std::vector<T> &s, gsl::span<T> b) {
         writeSlice(gsl::make_span(s.data(), s.size()), b);
-    };
+    }
 
     /**
      * @brief local helper function to write computed slice to provided buffer (Vector/span)

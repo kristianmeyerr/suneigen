@@ -95,7 +95,7 @@ namespace suneigen {
             throw CvodeException(status, "CVodeInit");
     }
 
-    void CVodeSolver::calcIC(const realtype /*tout1*/) const {};
+    void CVodeSolver::calcIC(const realtype /*tout1*/) const {}
 
     void CVodeSolver::setDenseJacFn() const {
         int status = CVodeSetJacFn(solver_memory_.get(), fJ);

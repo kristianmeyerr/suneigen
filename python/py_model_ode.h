@@ -13,7 +13,7 @@
 
 namespace suneigen::pymodel{
 
-    class PyModel_ODE : public suneigen::Model_ODE {
+    class PyModel_ODE : public Model_ODE {
     public:
 
         PyModel_ODE(

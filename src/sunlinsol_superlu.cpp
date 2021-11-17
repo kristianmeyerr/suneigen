@@ -17,7 +17,8 @@ SUNLinearSolver SUNLinSol_SuperLU(N_Vector y, SUNMatrix A){
     if (MatrixRows != N_VGetLength(y)) return(nullptr);
 
     // Create an empty linear solver
-    SUNLinearSolver S = SUNLinSolNewEmpty();
+    SUNLinearSolver S = nullptr;
+    S = SUNLinSolNewEmpty();
     if (S == nullptr) return(nullptr);
 
     // Attach operations
@@ -43,13 +44,9 @@ SUNLinearSolver SUNLinSol_SuperLU(N_Vector y, SUNMatrix A){
     content->last_flag = 0;
 
     // Use new since it calls the Eigen constructor
-    try {
-        content->solver = new Eigen::SparseLU<Eigen::SparseMatrix<double> >;
-    } catch(const std::bad_alloc& e){
-        SUNLinSolFree(S);
-        std::cout << "Allocation failed: " << e.what() << std::endl;
-        return(nullptr);
-    }
+    content->solver = nullptr;
+    content->solver = new(std::nothrow) Eigen::SparseLU<Eigen::SparseMatrix<double> >;
+    if (content->solver == nullptr) { SUNLinSolFree(S); return(nullptr); }
 
     return(S);
 }
@@ -171,12 +168,10 @@ int SUNLinSolFree_SuperLU(SUNLinearSolver S)
 
     // delete items from the contents structure (if it exists)
     if (S->content) {
-
         if(reinterpret_cast<SUNLinearSolverContent_SuperLU>(S->content)->solver){
-            free(reinterpret_cast<SUNLinearSolverContent_SuperLU>(S->content)->solver);
+            delete reinterpret_cast<SUNLinearSolverContent_SuperLU>(S->content)->solver;
             reinterpret_cast<SUNLinearSolverContent_SuperLU>(S->content)->solver = nullptr;
         }
-
         free(S->content);
         S->content = nullptr;
     }

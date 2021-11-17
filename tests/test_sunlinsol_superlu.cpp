@@ -17,12 +17,10 @@ TEST_CASE("Test that we can solve a linear system for CSC_Mat"){
     // Fill matrix with uniform random data in [0,1/n]
     SUNMatrix B = SUNDenseMatrix(n, n);
     for (int k=0; k<5*n; k++) {
-
         int i = rand() % n;
         int j = rand() % n;
         realtype* matdata = SUNDenseMatrix_Column(B,j);
         matdata[i] = static_cast<realtype>(rand()) / static_cast<realtype>(RAND_MAX / n);
-
     }
     // Add identity to matrix
     int fails = SUNMatScaleAddI(1.0, B);
@@ -30,6 +28,7 @@ TEST_CASE("Test that we can solve a linear system for CSC_Mat"){
 
     SUNMatrix A = SUNSparseFromDenseMatrix(B, 0.0, CSC_MAT);
     SUNMatDestroy(B);
+
 
     // Fill x vector with uniform random data in [0,1]
     N_Vector x = N_VNew_Serial(n);
@@ -41,6 +40,7 @@ TEST_CASE("Test that we can solve a linear system for CSC_Mat"){
     N_Vector b = N_VNew_Serial(n);
     fails += SUNMatMatvec(A, x, b);
     REQUIRE_MESSAGE(fails==0, "FAIL: SUNLinSol SUNMatMatvec failure\n");
+
 
     // Create SuperLUMT linear solver
     SUNLinearSolver LS = SUNLinSol_SuperLU(x, A);
@@ -70,6 +70,14 @@ TEST_CASE("Test that we can solve a linear system for CSC_Mat"){
 
     sunindextype lastflag_after = SUNLinSolLastFlag(LS);
     REQUIRE(lastflag_after==SUNLS_SUCCESS);
+
+    // Clean up
+    SUNMatDestroy(A);
+    N_VDestroy(x);
+    N_VDestroy(b);
+    SUNLinSolFree(LS);
+    N_VDestroy(y);
+
 
 }
 
@@ -133,5 +141,12 @@ TEST_CASE("Test that we can solve a linear system for CSR_MAT"){
 
     sunindextype lastflag_after = SUNLinSolLastFlag(LS);
     REQUIRE(lastflag_after==SUNLS_SUCCESS);
+
+    // Clean up
+    SUNMatDestroy(A);
+    N_VDestroy(b);
+    N_VDestroy(x);
+    N_VDestroy(y);
+    SUNLinSolFree(LS);
 
 }

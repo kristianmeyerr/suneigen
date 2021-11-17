@@ -80,6 +80,11 @@ target_include_directories(${LIBRARY_NAME}
         ${PROJECT_SOURCE_DIR}/thirdparty/sundials/src  # This is needed for cvodes/cvodes_impl.h
 )
 
+target_compile_options(${LIBRARY_NAME}
+    PRIVATE
+        -fvisibility=hidden
+)
+
 # Install suneigen interface library
 install(TARGETS ${LIBRARY_NAME} DESTINATION bin)
 
@@ -182,6 +187,11 @@ if(SUNEIGEN_BUILD_APP)
 
     # Enable link-time-optimization if available for non-debug configurations
     target_enable_lto(app optimized)
+
+    target_compile_options(app
+        PRIVATE
+            -fvisibility=hidden
+    )
 
     set_target_properties(app
         PROPERTIES

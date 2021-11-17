@@ -27,6 +27,11 @@ target_set_warnings(unit_tests
         DISABLE Annoying
 )
 
+target_compile_options(unit_tests
+    PRIVATE
+        -fvisibility=hidden
+)
+
 set_target_properties(unit_tests PROPERTIES
         CXX_STANDARD 17
         CXX_STANDARD_REQUIRED YES

@@ -1,0 +1,8 @@
+#ifndef SUNEIGEN_PARSEOPTIONS_H
+#define SUNEIGEN_PARSEOPTIONS_H
+
+namespace suneigen {
+
+}
+
+#endif //SUNEIGEN_PARSEOPTIONS_H

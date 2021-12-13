@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 project(SUNEIGEN VERSION 0.0.1 LANGUAGES CXX)
 
@@ -16,10 +16,12 @@ option(SUNEIGEN_BUILD_PYTHON "Enable the compilation of the python module." ON)
 option(SUNEIGEN_BUILD_TESTS "Enable the compilation of the test files." ON)
 option(SUNEIGEN_BUILD_APP "Enable the compilation of the app files." ON)
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+if(SUNEIGEN_BUILD_PYTHON)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
 
 # --------------------------------------------------------------------------------
-#                         CMake modules
+#                         CMake includes
 # --------------------------------------------------------------------------------
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
@@ -32,17 +34,13 @@ include(ConfigSafeGuards)
 include(LTO)
 include(Misc)
 include(Warnings)
+include(Documentation)
+include(Doctest)
+include(ThirdParty)
 
 # Check for LTO support.
 find_lto(CXX)
 
-# --------------------------------------------------------------------------------
-#                         Thirdparty dependencies
-# --------------------------------------------------------------------------------
-include(Doctest)
-find_package(Eigen3 3.4 REQUIRED)
-find_package(SUNDIALS 5.8 REQUIRED COMPONENTS sundials_cvodes sundials_nvecserial)
-set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/gsl/")
 
 # --------------------------------------------------------------------------------
 #                            Build the library
@@ -64,7 +62,8 @@ set(LIB_SOURCES
         src/forward_problem.cpp
         src/sundials_matrix_wrapper.cpp
         src/sundials_linsol_wrapper.cpp
-        src/model_state.cpp)
+        src/model_state.cpp
+        src/abstract_model.cpp)
 
 # Compile all sources into a library.
 add_library(${LIBRARY_NAME} OBJECT ${LIB_SOURCES})
@@ -80,6 +79,7 @@ target_include_directories(${LIBRARY_NAME}
         ${PROJECT_SOURCE_DIR}/thirdparty/sundials/src  # This is needed for cvodes/cvodes_impl.h
 )
 
+# Use the same visiliblity flag as in pybind11
 target_compile_options(${LIBRARY_NAME}
     PRIVATE
         -fvisibility=hidden
@@ -104,7 +104,7 @@ target_set_warnings(${LIBRARY_NAME} ENABLE ALL AS_ERROR ALL DISABLE Annoying)
 
 set_target_properties(${LIBRARY_NAME}
     PROPERTIES
-        CXX_STANDARD 17
+        CXX_STANDARD 20
         CXX_STANDARD_REQUIRED YES
         CXX_EXTENSIONS NO
 )
@@ -125,6 +125,8 @@ if(SUNEIGEN_BUILD_PYTHON)
 
     add_subdirectory(thirdparty/pybind11)
 
+    set(PYTHON_MODULE_NAME suneigen4py)
+
     set(PYTHON_SOURCES
             python/main.cpp
             python/py_model_ode.cpp
@@ -132,10 +134,10 @@ if(SUNEIGEN_BUILD_PYTHON)
     )
 
     # Compile suneigen source files into a Python module
-    pybind11_add_module(suneigen4py ${PYTHON_SOURCES})
+    pybind11_add_module(${PYTHON_MODULE_NAME} ${PYTHON_SOURCES})
 
     # Link autodiff against autodiff C++ library
-    target_link_libraries(suneigen4py
+    target_link_libraries(${PYTHON_MODULE_NAME}
         PRIVATE
             ${LIBRARY_NAME}
             Eigen3::Eigen
@@ -143,23 +145,23 @@ if(SUNEIGEN_BUILD_PYTHON)
 
     # SETUP_VERSION_INFO is defined by setup.py and passed into the C++ code as a
     # define (VERSION_INFO) here.
-    target_compile_definitions(suneigen4py
+    target_compile_definitions(${PYTHON_MODULE_NAME}
         PRIVATE
             VERSION_INFO=${SETUP_VERSION_INFO}
     )
 
     # https://pybind11.readthedocs.io/en/stable/faq.html#someclass-declared-with-greater-visibility-than-the-type-of-its-field-someclass-member-wattributes
-    target_compile_options(suneigen4py
+    target_compile_options(${PYTHON_MODULE_NAME}
         PRIVATE
             -fvisibility=hidden
     )
 
     # Enable link-time-optimization if available for non-debug configurations
-    target_enable_lto(suneigen4py optimized)
+    target_enable_lto(${PYTHON_MODULE_NAME} optimized)
 
-    set_target_properties(suneigen4py
+    set_target_properties(${PYTHON_MODULE_NAME}
         PROPERTIES
-            CXX_STANDARD 17
+            CXX_STANDARD 20
             CXX_STANDARD_REQUIRED YES
             CXX_EXTENSIONS NO
     )
@@ -171,33 +173,6 @@ endif()
 
 if(SUNEIGEN_BUILD_APP)
 
-    set(APP_SOURCES
-            app/main.cpp
-            include/abstract_model.h app/model_robertson.cpp app/model_robertson.h include/model_dimensions.h)
-
-    add_executable(app ${APP_SOURCES})
-
-    target_link_libraries(app
-        PRIVATE
-            ${LIBRARY_NAME}
-            Eigen3::Eigen
-    )
-
-    target_set_warnings(app ENABLE ALL AS_ERROR ALL DISABLE Annoying)
-
-    # Enable link-time-optimization if available for non-debug configurations
-    target_enable_lto(app optimized)
-
-    target_compile_options(app
-        PRIVATE
-            -fvisibility=hidden
-    )
-
-    set_target_properties(app
-        PROPERTIES
-            CXX_STANDARD 17
-            CXX_STANDARD_REQUIRED YES
-            CXX_EXTENSIONS NO
-        )
+    add_subdirectory(app/)
 
 endif()

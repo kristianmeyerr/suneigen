@@ -7,6 +7,8 @@
 #include <cvodes/cvodes_diag.h>
 #include <cvodes/cvodes_impl.h>
 
+#define ZERO RCONST(0.0)
+#define ONE RCONST(1.0)
 
 namespace suneigen {
 
@@ -23,10 +25,43 @@ namespace suneigen {
                         void *user_data, N_Vector tmp1, N_Vector tmp2,
                         N_Vector tmp3);
 
+    static int froot(realtype t, N_Vector x, realtype *root, void *user_data);
+
     // Ensure SunEigen options are in sync with Sundials options
     static_assert(static_cast<int>(InternalSensitivityMethod::simultaneous) == CV_SIMULTANEOUS);
 
     Solver* CVodeSolver::clone() const { return new CVodeSolver(*this); }
+
+    void CVodeSolver::sensToggleOff() const {
+        auto status = CVodeSensToggleOff(solver_memory_.get());
+        if (status != CV_SUCCESS)
+            throw CvodeException(status, "CVodeSensToggleOff");
+    }
+
+    void CVodeSolver::reInit(const realtype t0, const Vector &yy0,
+                             const Vector & /*yp0*/) const {
+        auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
+        cv_mem->cv_tn = t0;
+        if (solver_was_called_F_)
+            force_reinit_postprocess_F_ = true;
+        x_.copy(yy0);
+        resetState(cv_mem, x_.getNVector());
+    }
+
+    void CVodeSolver::sensReInit(const VectorArray &yyS0,
+                                 const VectorArray & /*ypS0*/) const {
+        auto cv_mem = static_cast<CVodeMem>(solver_memory_.get());
+        /* Initialize znS[0] in the history array */
+        for (unsigned int is = 0; is < np(); is++)
+            cv_mem->cv_cvals[is] = ONE;
+        if (solver_was_called_F_)
+            force_reinit_postprocess_F_ = true;
+        sx_.copy(yyS0);
+        int status = N_VScaleVectorArray(static_cast<int>(np()), cv_mem->cv_cvals,
+                                         sx_.getNVectorArray(), cv_mem->cv_znS[0]);
+        if (status != CV_SUCCESS)
+            throw CvodeException(CV_VECTOROP_ERR, "CVodeSensReInit");
+    }
 
     void CVodeSolver::allocateSolver() const {
         if (!solver_memory_)
@@ -64,6 +99,24 @@ namespace suneigen {
             throw CvodeException(status, "CVodeGetNumNonlinSolvConvFails");
     }
 
+    void CVodeSolver::getNumNonlinSolvIters(const void *sun_mem, size_t *numnonlinsolviters) const {
+        int status = CVodeGetNumNonlinSolvIters(const_cast<void *>(sun_mem),
+                                                reinterpret_cast<long *>(numnonlinsolviters));
+        if (status != CV_SUCCESS)
+            throw CvodeException(status, "getNumNonlinSolvIters");
+    }
+
+    void CVodeSolver::getNumJacEvals(const void* sun_mem, size_t *numjacevals) const {
+        int status = CVodeGetNumJacEvals(const_cast<void *>(sun_mem),
+                                                reinterpret_cast<long *>(numjacevals));
+        if (status != CV_SUCCESS)
+            throw CvodeException(status, "getNumJacEvals");
+    }
+
+    std::string CVodeSolver::getSolverType() const {
+        return std::string("CVode");
+    }
+
     void CVodeSolver::getLastOrder(const void *sun_mem, size_t *order) const {
         int status = CVodeGetLastOrder(const_cast<void *>(sun_mem), reinterpret_cast<int *>(order));
         if (status != CV_SUCCESS)
@@ -74,6 +127,12 @@ namespace suneigen {
         int status = CVodeSetStopTime(solver_memory_.get(), tstop);
         if (status != CV_SUCCESS)
             throw CvodeException(status, "CVodeSetStopTime");
+    }
+
+    void CVodeSolver::turnOffRootFinding() const {
+        int status = CVodeRootInit(solver_memory_.get(), 0, nullptr);
+        if (status != CV_SUCCESS)
+            throw CvodeException(status, "CVodeRootInit");
     }
 
     void CVodeSolver::init(const realtype t0, const Vector &x0,
@@ -96,6 +155,12 @@ namespace suneigen {
     }
 
     void CVodeSolver::calcIC(const realtype /*tout1*/) const {}
+
+    void CVodeSolver::rootInit(int ne) const {
+        int status = CVodeRootInit(solver_memory_.get(), ne, froot);
+        if (status != CV_SUCCESS)
+            throw CvodeException(status, "CVodeRootInit");
+    }
 
     void CVodeSolver::setDenseJacFn() const {
         int status = CVodeSetJacFn(solver_memory_.get(), fJ);
@@ -187,6 +252,42 @@ namespace suneigen {
 
     void CVodeSolver::setSuppressAlg(const bool /*flag*/) const {}
 
+    void CVodeSolver::resetState(void *ami_mem, const_N_Vector y0) const {
+
+        auto cv_mem = static_cast<CVodeMem>(ami_mem);
+        /* here we force the order in the next step to zero, and update the
+         Nordsieck history array, this is largely copied from CVodeReInit with
+         explanations from cvodes_impl.h
+         */
+
+        /* Set step parameters */
+
+        /* current order */
+        cv_mem->cv_q = 1;
+        /* L = q + 1 */
+        cv_mem->cv_L = 2;
+        /* number of steps to wait before updating in q */
+        cv_mem->cv_qwait = cv_mem->cv_L;
+        /* last successful q value used                */
+        cv_mem->cv_qu = 0;
+        /* last successful h value used                */
+        cv_mem->cv_hu = ZERO;
+        /* tolerance scale factor                      */
+        cv_mem->cv_tolsf = ONE;
+
+        /* Initialize other integrator optional outputs */
+
+        /* actual initial stepsize                     */
+        cv_mem->cv_h0u = ZERO;
+        /* step size to be used on the next step       */
+        cv_mem->cv_next_h = ZERO;
+        /* order to be used on the next step           */
+        cv_mem->cv_next_q = 0;
+
+        /* write updated state to Nordsieck history array  */
+        N_VScale(ONE, const_cast<N_Vector>(y0), cv_mem->cv_zn[0]);
+    }
+
     void CVodeSolver::setSensParams(const realtype *p, const realtype *pbar,
                                     const int *plist) const {
         int status = CVodeSetSensParams(
@@ -200,6 +301,12 @@ namespace suneigen {
         int status = CVodeSetJacFn(solver_memory_.get(), fJSparse);
         if (status != CV_SUCCESS)
             throw CvodeException(status, "CVodeSetJacFn");
+    }
+
+    void CVodeSolver::getRootInfo(int *rootsfound) const {
+        int status = CVodeGetRootInfo(solver_memory_.get(), rootsfound);
+        if (status != CV_SUCCESS)
+            throw CvodeException(status, "CVodeGetRootInfo");
     }
 
     void CVodeSolver::setLinearSolver() const {
@@ -309,6 +416,26 @@ namespace suneigen {
     }
 
     /**
+     * @brief Event trigger function for events
+     * @param t timepoint
+     * @param x Vector with the states
+     * @param root array with root function values
+     * @param user_data object with user input
+     * @return status flag indicating successful execution
+     */
+    static int froot(realtype t, N_Vector x, realtype *root,
+                     void *user_data) {
+        auto typed_udata = static_cast<CVodeSolver::user_data_type *>(user_data);
+        Expects(typed_udata);
+        auto model = dynamic_cast<Model_ODE *>(typed_udata->first);
+        Expects(model);
+
+        model->froot(t, x, gsl::make_span<realtype>(root, model->ne));
+        return model->checkFinite(gsl::make_span<realtype>(root, model->ne),
+                                  "root function");
+    }
+
+    /**
      * @brief residual function of the ODE
      * @param t timepoint
      * @param x Vector with the states
@@ -402,5 +529,7 @@ namespace suneigen {
         Expects(typed_udata);
         return typed_udata->first;
     }
+
+
 
 }

@@ -19,7 +19,6 @@ namespace suneigen {
     class ReturnData;
     class Model;
     class Solver;
-    class SunApplication;
 
     class Solver {
     public:
@@ -80,12 +79,26 @@ namespace suneigen {
                  const VectorArray& sdx0) const;
 
         /**
+        * getRootInfo extracts information which event occurred
+        *
+        * @param rootsfound array with flags indicating whether the respective
+        * event occurred
+        */
+        virtual void getRootInfo(int* rootsfound) const = 0;
+
+        /**
         * @brief Calculates consistent initial conditions, assumes initial
         * states to be correct (DAE only)
         *
         * @param tout1 next timepoint to be computed (sets timescale)
         */
         virtual void calcIC(realtype tout1) const = 0;
+
+        /**
+         * @brief Disable rootfinding
+         */
+        virtual void turnOffRootFinding() const = 0;
+
 
         /**
         * @brief Return current sensitivity method
@@ -352,6 +365,32 @@ namespace suneigen {
         const Vector& getQuadrature(realtype t) const;
 
         /**
+         * @brief Reinitializes the states in the solver after an event occurrence
+         *
+         * @param t0 reinitialization timepoint
+         * @param yy0 initial state variables
+         * @param yp0 initial derivative state variables (DAE only)
+         */
+        virtual void reInit(realtype t0, const Vector &yy0,
+                            const Vector &yp0) const = 0;
+
+        /**
+         * @brief Reinitializes the state sensitivities in the solver after an
+         * event occurrence
+         *
+         * @param yyS0 new state sensitivity
+         * @param ypS0 new derivative state sensitivities (DAE only)
+         */
+        virtual void sensReInit(const VectorArray &yyS0,
+                                const VectorArray &ypS0) const = 0;
+
+        /**
+         * @brief Switches off computation of  state sensitivities without
+         * deallocating the memory for sensitivities
+         */
+        virtual void sensToggleOff() const = 0;
+
+        /**
          * @brief current solver timepoint
          * @return t
          */
@@ -373,7 +412,7 @@ namespace suneigen {
          * @brief number of parameters with which the solver was initialized
          * @return sx.getLength()
          */
-        size_t np() const;
+        unsigned int np() const;
 
         /**
          * @brief number of quadratures with which the solver was initialized
@@ -388,6 +427,15 @@ namespace suneigen {
         bool computingFSA() const {
             return getSensitivityOrder() >= SensitivityOrder::first &&
                    getSensitivityMethod() == SensitivityMethod::forward && np() > 0;
+        }
+
+        /**
+         * @brief check if ASA is being computed
+         * @return flag
+         */
+        bool computingASA() const {
+            return getSensitivityOrder() >= SensitivityOrder::first &&
+                   getSensitivityMethod() == SensitivityMethod::adjoint && np() > 0;
         }
 
         /**
@@ -441,6 +489,22 @@ namespace suneigen {
         }
 
         /**
+         * @brief Accessor nnlsi
+         * @return nnlscf
+         */
+        std::vector<size_t> const& getNumNonlinSolvIters() const {
+            return nnlsi_;
+        }
+
+        /**
+         * @brief Accessor nje
+         * @return nje
+         */
+        std::vector<size_t> const& getNumJacEvals() const {
+            return nje_;
+        }
+
+        /**
          * @brief Accessor nnlscfB
          * @return nnlscfB
          */
@@ -460,6 +524,11 @@ namespace suneigen {
         * computation */
         size_t newton_maxlinsteps_ {0L};
 
+        /**
+         * @brief Get the solver type used (cvodes or idas)
+         * @return A string representing the solver used.
+         */
+        virtual std::string getSolverType() const = 0;
 
         /**
          * @brief Check equality of data members excluding solver memory
@@ -468,9 +537,6 @@ namespace suneigen {
          * @return success or not
          */
         friend bool operator==(const Solver &a, const Solver &b);
-
-        /** SunEigen context */
-        SunApplication* app;
 
     protected:
 
@@ -532,6 +598,13 @@ namespace suneigen {
          */
         virtual void init(realtype t0, const Vector &x0,
                           const Vector &dx0) const = 0;
+
+        /**
+         * @brief Initializes the rootfinding for events
+         *
+         * @param ne number of different events
+         */
+        virtual void rootInit(int ne) const = 0;
 
         /**
          * @brief Set the dense Jacobian function
@@ -664,6 +737,22 @@ namespace suneigen {
          * @param numsteps output array
          */
         virtual void getNumSteps(const void *sun_mem, size_t *numsteps) const = 0;
+
+        /**
+         * @brief reports the number of nonlinear solver iterations.
+         * @param sun_mem pointer to the solver memory instance (can be from
+         * forward or backward problem)
+         * @param numnonlinsolviters output array
+         */
+        virtual void getNumNonlinSolvIters(const void* sun_mem, size_t *numnonlinsolviters) const = 0;
+
+        /**
+         * @brief reports the number of jacobian evaluations.
+         * @param sun_mem pointer to the solver memory instance (can be from
+         * forward or backward problem)
+         * @param numjacevals output array
+         */
+        virtual void getNumJacEvals(const void* sun_mem, size_t *numjacevals) const = 0;
 
         /**
          * @brief reports the number of right hand evaluations
@@ -893,7 +982,7 @@ namespace suneigen {
         booleantype stldet_ {true};
 
         /** linear solver specification */
-        LinearSolver linsol_ {LinearSolver::dense};
+        LinearSolver linsol_ {LinearSolver::SuperLU};
 
         /** maximum number of allowed Newton steps for steady state computation */
         // long int newton_maxsteps_ {0L};
@@ -938,12 +1027,21 @@ namespace suneigen {
         mutable std::vector<size_t> netfB_;
 
         /**
-         * number of linear solver convergence failures forward problem (dimension:
+         * number of non-linear solver convergence failures forward problem (dimension:
          * nt) */
         mutable std::vector<size_t> nnlscf_;
 
         /**
-         * number of linear solver convergence failures backward problem (dimension:
+         * Number of non-linear solver iterations
+         */
+        mutable std::vector<size_t> nnlsi_;
+
+        /**
+         * Number of jacobian evaluations.
+         */
+        mutable std::vector<size_t> nje_;
+        /**
+         * number of non-linear solver convergence failures backward problem (dimension:
          * nt) */
         mutable std::vector<size_t> nnlscfB_;
 

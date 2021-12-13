@@ -1,7 +1,9 @@
 #include "return_data.h"
-
 #include "solver.h"
+#include "defines.h"
 
+#include <string>
+#include <iostream>
 #include <cmath>
 
 namespace suneigen {
@@ -9,18 +11,18 @@ namespace suneigen {
     ReturnData::ReturnData(Solver const &solver, const Model &model)
             : ReturnData(model.getTimepoints(),
                          ModelDimensions(static_cast<ModelDimensions const&>(model)),
-                         model.nt(), solver.getSensitivityOrder(),
+                         model.nMaxEvent(), model.nt(), solver.getSensitivityOrder(),
                          solver.getSensitivityMethod())
                          {}
 
     ReturnData::ReturnData(std::vector<realtype> ts_,
                            ModelDimensions const& model_dimensions,
-                           size_t nt_, SensitivityOrder sensi_,
+                           unsigned int nmaxevent_, size_t nt_, SensitivityOrder sensi_,
                            SensitivityMethod sensi_meth_)
             : ModelDimensions(model_dimensions), ts(std::move(ts_)),
-            nt(nt_), sensi(sensi_), sensi_meth(sensi_meth_),
+              nmaxevent(nmaxevent_), nt(nt_), sensi(sensi_), sensi_meth(sensi_meth_),
             x_solver_(nx), sx_solver_(nx, np),
-            x_rdata_(nx), sx_rdata_(nx, np){
+            x_rdata_(nx), sx_rdata_(nx, np), nroots_(ne){
 
         initiainitializeReporting();
 
@@ -30,6 +32,9 @@ namespace suneigen {
 
         xdot.resize(nx, std::nan(""));
 
+        // initialize with 0.0, so we only need to write non-zero values
+        z.resize(nmaxevent * nz, 0.0);
+
         x.resize(nt * nx, 0.0);
 
         if (nt > 0) {
@@ -37,6 +42,8 @@ namespace suneigen {
             numrhsevals.resize(nt, 0);
             numerrtestfails.resize(nt, 0);
             numnonlinsolvconvfails.resize(nt, 0);
+            numnonlinsolviter.resize(nt, 0);
+            numjacevals.resize(nt, 0);
             order.resize(nt, 0);
         }
 
@@ -65,7 +72,8 @@ namespace suneigen {
 
     void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model) {
 
-        auto initialState = fwd.getInitialSimulationState();
+        t0 = model.t0();
+        SimulationState initialState = fwd.getInitialSimulationState();
         if (initialState.x.getLength() == 0 && model.nx > 0)
             return; // if x wasn't set forward problem failed during initialization
 
@@ -87,6 +95,36 @@ namespace suneigen {
                 if (!std::isinf(model.getTimepoint(it)))
                     invalidate(it);
             }
+        }
+
+        // process event data
+        if (nz > 0) {
+            auto rootidx = fwd.getRootIndexes();
+            for (int iroot = 0; iroot <= fwd.getEventCounter(); iroot++) {
+                readSimulationState(fwd.getSimulationStateEvent(static_cast<unsigned int>(iroot)), model);
+                getEventOutput(t_, rootidx.at(static_cast<unsigned int>(iroot)), model);
+            }
+        }
+
+    }
+
+    void ReturnData::getEventOutput(realtype t, std::vector<int> rootidx,
+                                    Model &model) {
+
+        for (unsigned int ie = 0; ie < ne; ie++) {
+            if (rootidx.at(ie) != 1 || nroots_.at(ie) >= nmaxevent)
+                continue;
+
+            /* get event output */
+            if (!z.empty())
+                model.getEvent(slice(z, nroots_.at(ie), nz), ie, t, x_solver_);
+
+            if (sensi >= SensitivityOrder::first) {
+                if (sensi_meth == SensitivityMethod::forward) {
+                    // getEventSensisFSA(ie, t, model);
+                }
+            }
+            nroots_.at(ie)++;
         }
     }
 
@@ -127,7 +165,13 @@ namespace suneigen {
 
     void ReturnData::processSolver(Solver const &solver) {
 
+        // Solver statistics
         cpu_time = solver.getCpuTime();
+        solver_type = solver.getSolverType();
+        abstol = solver.getAbsoluteTolerance();
+        reltol = solver.getRelativeTolerance();
+        lmm_solver = solver.getLinearMultistepMethod();
+        ls_solver = solver.getLinearSolver();
 
         const std::vector<size_t> *tmp;
 
@@ -153,6 +197,16 @@ namespace suneigen {
             std::copy_n(tmp->cbegin(), tmp->size(), numnonlinsolvconvfails.begin());
         }
 
+        if (!numnonlinsolviter.empty()) {
+            tmp = &solver.getNumNonlinSolvIters();
+            std::copy_n(tmp->cbegin(), tmp->size(), numnonlinsolviter.begin());
+        }
+
+        if (!numjacevals.empty()) {
+            tmp = &solver.getNumJacEvals();
+            std::copy_n(tmp->cbegin(), tmp->size(), numjacevals.begin());
+        }
+
         if (!order.empty()) {
             tmp = &solver.getLastOrder();
             std::copy_n(tmp->cbegin(), tmp->size(), order.begin());
@@ -167,6 +221,80 @@ namespace suneigen {
                            slice(sx, it * np + ip, nx));
             }
         }
+    }
+
+    void ReturnData::printStatistics(){
+
+        // Statistics
+
+        int numsteps_total = 0;
+        for (auto& n : numsteps)
+            numsteps_total += n;
+
+        int numrhsevals_total = 0;
+        for (auto& n : numrhsevals)
+            numrhsevals_total += n;
+
+        int numerrtestfails_total = 0;
+        for (auto& n : numerrtestfails)
+            numerrtestfails_total += n;
+
+        int numnonlinsolvconvfails_total = 0;
+        for (auto& n : numnonlinsolvconvfails)
+            numnonlinsolvconvfails_total += n;
+
+        int numnonlinsolviter_total = 0;
+        for (auto& n : numnonlinsolviter)
+            numnonlinsolviter_total += n;
+
+        int numjacevals_total = 0;
+        for (auto& n : numjacevals)
+            numjacevals_total += n;
+
+        std::string lmm;
+        switch(lmm_solver){
+            case LinearMultistepMethod::BDF:
+                lmm = "BDF";
+                break;
+            case LinearMultistepMethod::adams:
+                lmm = "adams";
+                break;
+        }
+
+        std::string ls;
+        switch(ls_solver){
+            case LinearSolver::dense:
+                ls = "Dense";
+                break;
+            case LinearSolver::SuperLU:
+                ls = "SuperLU";
+                break;
+        }
+
+        int max_order = *max_element(std::begin(order), std::end(order));
+
+        std::cout << "[[Simulation statistics]]" << std::endl;
+        std::cout << "    # Number of steps: " << numsteps_total << std::endl;
+        std::cout << "    # Number of function evaluations: " << numrhsevals_total << std::endl;
+        std::cout << "    # Number of Jacobian evaluations: " << numjacevals_total << std::endl;
+        std::cout << "    # Number of error test failures: " << numerrtestfails_total << std::endl;
+        std::cout << "    # Number of nonlinear iterations: " << numnonlinsolviter_total << std::endl;
+        std::cout << "    # Number of nonlinear convergence failures: " << numnonlinsolvconvfails_total << std::endl;
+        std::cout << "    # Simulation interval: " << ts.back() - t0 << std::endl;
+        std::cout << "    # Wall clock time (ms): " << cpu_time << std::endl;
+        std::cout << std::endl;
+        std::cout << "[[Solver options]]" << std::endl;
+        std::cout << "    # Solver: " << solver_type << std::endl;
+        std::cout << "    # Linear multistep method: " << lmm << std::endl;
+        std::cout << "    # Linear solver: " << ls << std::endl;
+        std::cout << "    # Maximal order: " << max_order << std::endl;
+        std::cout << "    # Absolute tolerance: " << abstol << std::endl;
+        std::cout << "    # Relative tolerance: " << reltol << std::endl;
+        std::cout << std::endl;
+
+
+
+
     }
 
 

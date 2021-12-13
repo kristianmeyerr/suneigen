@@ -24,11 +24,23 @@ namespace suneigen {
          */
         Solver *clone() const override;
 
+        void reInit(realtype t0, const Vector &yy0,
+                    const Vector &yp0) const override;
+
+        void sensReInit(const VectorArray &yyS0,
+                        const VectorArray &ypS0) const override;
+
+        void sensToggleOff() const override;
+
         void getSensDky(realtype t, int k) const override;
 
         void setStopTime(realtype tstop) const override;
 
+        void turnOffRootFinding() const override;
+
         int solve(realtype tout, int itask) const override;
+
+        void getRootInfo(int *rootsfound) const override;
 
         const Model *getModel() const override;
 
@@ -75,12 +87,23 @@ namespace suneigen {
 
         void setSuppressAlg(bool flag) const override;
 
+        /**
+         * @brief resetState reset the CVODES solver to restart integration after a rhs discontinuity.
+         * @param cv_mem pointer to CVODES solver memory object
+         * @param y0 new state vector
+         */
+        void resetState(void *cv_mem, const_N_Vector y0) const;
+
         void setSensParams(const realtype *p, const realtype *pbar,
                            const int *plist) const override;
 
         void getDky(realtype t, int k) const override;
 
         void getNumSteps(const void* sun_mem, size_t *numsteps) const override;
+
+        void getNumNonlinSolvIters(const void* sun_mem, size_t *numnonlinsolviters) const override;
+
+        void getNumJacEvals(const void* sun_mem, size_t *numjacevals) const override;
 
         void getNumRhsEvals(const void* sun_mem,
                             size_t *numrhsevals) const override;
@@ -93,8 +116,12 @@ namespace suneigen {
 
         void getLastOrder(const void* sun_mem, size_t *order) const override;
 
+        std::string getSolverType() const override;
+
         void init(realtype t0, const Vector &x0,
                   const Vector &dx0) const override;
+
+        void rootInit(int ne) const override;
 
         void setDenseJacFn() const override;
 

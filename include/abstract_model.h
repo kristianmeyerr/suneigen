@@ -31,6 +31,16 @@ namespace suneigen{
         virtual std::unique_ptr<Solver> getSolver() = 0;
 
         /**
+         * @brief Root function
+         * @param t time
+         * @param x state
+         * @param dx time derivative of state (DAE only)
+         * @param root array to which values of the root function will be written
+         */
+        virtual void froot(realtype t, const Vector &x,
+                           const Vector &dx, gsl::span<realtype> root) = 0;
+
+        /**
          * @brief Residual function
          * @param t time
          * @param x state
@@ -71,8 +81,63 @@ namespace suneigen{
          * @brief Model-specific implementation of fx0
          * @param x0 initial state
          * @param t initial time
+         * @param p parameter vector
+         * @param k constant vector
          */
-        virtual void fx0(realtype *x0, realtype t) = 0;
+        virtual void fx0(realtype *x0, realtype t, const realtype *p, const realtype *k);
+
+        /**
+         * @brief Model-specific implementation of fsx0
+         * @param sx0 initial state sensitivities
+         * @param t initial time
+         * @param x0 initial state
+         * @param ip sensitivity index
+         */
+        virtual void fsx0(realtype *sx0, realtype t, const realtype *x0,
+                          const realtype *p, unsigned int ip);
+
+        /**
+         * @brief Model-specific implementation of fstau
+         * @param stau total derivative of event timepoint
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param h Heaviside vector
+         * @param sx current state sensitivity
+         * @param ip sensitivity index
+         * @param ie event index
+         */
+        virtual void fstau(realtype *stau, realtype t, const realtype *x,
+                           const realtype *p, const realtype *h,
+                           const realtype *sx, unsigned int ip, unsigned int ie);
+
+        /**
+         * @brief Model-specific implementation of fz
+         * @param z value of event output
+         * @param ie event index
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param k constant vector
+         * @param h Heaviside vector
+         */
+        virtual void fz(realtype *z, unsigned int ie, realtype t, const realtype *x,
+                        const realtype *p, const realtype *k, const realtype *h);
+
+        /**
+         * @brief Model-specific implementation of fdeltax
+         * @param deltax state update
+         * @param t current time
+         * @param x current state
+         * @param p parameter vector
+         * @param h Heaviside vector
+         * @param ie event index
+         * @param xdot new model right hand side
+         * @param xdot_old previous model right hand side
+         */
+        virtual void fdeltax(realtype *deltax, realtype t, const realtype *x,
+                             const realtype *p, const realtype *h, unsigned int ie,
+                             const realtype *xdot, const realtype *xdot_old);
 
 
     };

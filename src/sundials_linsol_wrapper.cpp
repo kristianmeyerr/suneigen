@@ -145,30 +145,38 @@ namespace suneigen {
                     "Nonlinear solver initialization failed with code %d", status);
     }
 
-    SUNLinSolBand::SUNLinSolBand(N_Vector x, SUNMatrix A)
-            : SUNLinSolWrapper(SUNLinSol_Band(x, A)) {
-        if (!solver_)
-            throw SunException("Failed to create solver.");
-    }
-
-    SUNLinSolBand::SUNLinSolBand(const Vector &x, int ubw, int lbw) :
-            A_(SUNMatrixWrapper(static_cast<sunindextype>(x.getLength()), ubw, lbw)) {
-        solver_ = SUNLinSol_Band(const_cast<N_Vector>(x.getNVector()), A_.get());
-        if (!solver_)
-            throw SunException("Failed to create solver.");
-
-    }
-
-    SUNMatrix SUNLinSolBand::getMatrix() const { return A_.get(); }
-
     SUNLinSolDense::SUNLinSolDense(const Vector &x) :
-            A_(SUNMatrixWrapper(static_cast<sunindextype>(x.getLength()), static_cast<sunindextype>(x.getLength()))) {
+    A_(SUNMatrixWrapper(static_cast<sunindextype>(x.getLength()),
+            static_cast<sunindextype>(x.getLength())))
+    {
         solver_ = SUNLinSol_Dense(const_cast<N_Vector>(x.getNVector()), A_.get());
         if (!solver_)
             throw SunException("Failed to create solver.");
     }
 
     SUNMatrix SUNLinSolDense::getMatrix() const { return A_.get(); }
+
+    SUNLinSolSuperLU::SUNLinSolSuperLU(N_Vector x_, SUNMatrix A_)
+            : SUNLinSolWrapper(SUNLinSol_SuperLU(x_, A_))
+    {
+        if (!solver_)
+            throw SunException("Failed to create solver.");
+    }
+
+    SUNLinSolSuperLU::SUNLinSolSuperLU(Vector &x, int nnz, int sparsetype)
+            : A(SUNMatrixWrapper(static_cast<sunindextype>(x.getLength()),
+                    static_cast<sunindextype>(x.getLength()), nnz, sparsetype))
+    {
+        solver_ = SUNLinSol_SuperLU(x.getNVector(), A.get());
+        if (!solver_)
+            throw SunException("Failed to create solver.");
+    }
+
+    SUNMatrix SUNLinSolSuperLU::getMatrix() const
+    {
+        return A.get();
+    }
+
 
     SUNNonLinSolNewton::SUNNonLinSolNewton(N_Vector x)
             : SUNNonLinSolWrapper(SUNNonlinSol_Newton(x)) {

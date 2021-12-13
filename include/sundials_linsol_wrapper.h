@@ -3,12 +3,12 @@
 
 #include "exception.h"
 #include "sundials_matrix_wrapper.h"
+
 #include "vector.h"
 
 #include <sundials/sundials_config.h>
-#include <sunlinsol/sunlinsol_band.h>
 #include <sunlinsol/sunlinsol_dense.h>
-#include <sunlinsol_superlu.h>
+#include "sunlinsol_superlu.h"
 
 #include <sunnonlinsol/sunnonlinsol_fixedpoint.h>
 #include <sunnonlinsol/sunnonlinsol_newton.h>
@@ -128,35 +128,6 @@ namespace suneigen {
     };
 
     /**
-     * @brief SUNDIALS band direct solver.
-     */
-    class SUNLinSolBand : public SUNLinSolWrapper {
-    public:
-        /**
-         * @brief Create solver using existing matrix A without taking ownership of
-         * A.
-         * @param x A template for cloning vectors needed within the solver.
-         * @param A square matrix
-         */
-        SUNLinSolBand(N_Vector x, SUNMatrix A);
-
-        /**
-         * @brief Create new band solver and matrix A.
-         * @param x A template for cloning vectors needed within the solver.
-         * @param ubw upper bandwidth of band matrix A
-         * @param lbw lower bandwidth of band matrix A
-         */
-        SUNLinSolBand(Vector const &x, int ubw, int lbw);
-
-        [[nodiscard]] SUNMatrix getMatrix() const override;
-
-    private:
-        /** Matrix A for solver, only if created by here. */
-        SUNMatrixWrapper A_;
-    };
-
-
-    /**
      * @brief SUNDIALS dense direct solver.
      */
     class SUNLinSolDense : public SUNLinSolWrapper {
@@ -173,6 +144,36 @@ namespace suneigen {
         /** Matrix A for solver, only if created by here. */
         SUNMatrixWrapper A_;
     };
+
+    /**
+     * @brief SUNDIALS SuperLUMT sparse direct solver.
+     */
+    class SUNLinSolSuperLU : public SUNLinSolWrapper {
+    public:
+
+        /**
+         * @brief Create SuperLUMT solver with a given matrix
+         * @param x A template for cloning vectors needed within the solver.
+         * @param A sparse matrix
+         */
+        SUNLinSolSuperLU(N_Vector x, SUNMatrix A);
+
+        /**
+         * @brief Create SuperLU solver and matrix to operate on
+         *
+         * @param x A template for cloning vectors needed within the solver.
+         * @param nnz Number of non-zeros in matrix A
+         * @param sparsetype Sparse matrix type (CSC_MAT, CSR_MAT)
+         */
+        SUNLinSolSuperLU(Vector &x, int nnz, int sparsetype);
+
+        [[nodiscard]] SUNMatrix getMatrix() const override;
+
+    private:
+        /** Sparse matrix A for solver, only if created by here. */
+        SUNMatrixWrapper A;
+    };
+
 
     /**
      * @brief A RAII wrapper for SUNNonLinearSolver structs which solve the

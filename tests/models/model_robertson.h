@@ -33,7 +33,7 @@ namespace suneigen::model_robertson{
                 suneigen::SimulationParameters(
                         std::vector<realtype>(1, 1.0),
                         std::vector<realtype>(3, 1.0)),
-                std::vector<int>{1,2})
+                std::vector<int>{1, 2})
                 {}
 
         void froot(realtype *root, const realtype t, const realtype *x,

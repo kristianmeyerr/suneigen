@@ -60,8 +60,7 @@ namespace suneigen {
     /** linear solvers for CVODES/IDAS */
     enum class LinearSolver {
         dense = 1,
-        band = 2,
-        SuperLU = 3,
+        SuperLU = 2,
     };
 
     /** orders of sensitivity analysis */

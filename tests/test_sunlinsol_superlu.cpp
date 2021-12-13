@@ -29,7 +29,6 @@ TEST_CASE("Test that we can solve a linear system for CSC_Mat"){
     SUNMatrix A = SUNSparseFromDenseMatrix(B, 0.0, CSC_MAT);
     SUNMatDestroy(B);
 
-
     // Fill x vector with uniform random data in [0,1]
     N_Vector x = N_VNew_Serial(n);
     realtype* x_ptr = N_VGetArrayPointer(x);

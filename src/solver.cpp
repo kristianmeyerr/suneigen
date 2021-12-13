@@ -7,6 +7,8 @@
 #include "exception.h"
 #include "suneigen.h"
 
+#include <ctime>
+
 namespace suneigen {
 
     //Solver::Solver(SunApplication* app_) : app(app_){}
@@ -28,6 +30,7 @@ namespace suneigen {
     int Solver::run(const realtype tout) const {
         setStopTime(tout);
         clock_t starttime = clock();
+
         int status = SUNEIGEN_SUCCESS;
 
         apply_max_num_steps();
@@ -178,7 +181,7 @@ namespace suneigen {
     }
 
 
-    void Solver::resetMutableMemory(const size_t nx, const size_t nplist,
+    void Solver::resetMutableMemory(const size_t nx, const size_t np,
                                     const size_t nquad) const {
         solver_memory_ = nullptr;
         initialized_ = false;
@@ -190,8 +193,8 @@ namespace suneigen {
 
         x_ = Vector(nx);  // @todo Is the copy or move assignment operator called here?
         dx_ = Vector(nx);
-        sx_ = VectorArray(nx, nplist);
-        sdx_ = VectorArray(nx, nplist);
+        sx_ = VectorArray(nx, np);
+        sdx_ = VectorArray(nx, np);
 
         //xB_ = Vector(nx);
         //dxB_ = Vector(nx);
@@ -206,12 +209,7 @@ namespace suneigen {
     void Solver::setup(realtype t0, Model *model, const Vector& x0,
                        const Vector& dx0, const VectorArray& sx0,
                        const VectorArray& sdx0) const {
-        (void)t0;
-        (void)model;
-        (void)x0;
-        (void)dx0;
-        (void)sx0;
-        (void)sdx0;
+        (void)sx0; (void)sdx0;
 
         if (nx() != model->nx || np() != model->np())
             resetMutableMemory(model->nx, model->np(), model->np());
@@ -239,6 +237,8 @@ namespace suneigen {
 
         /* activates stability limit detection */
         setStabLimDet(stldet_);
+
+        rootInit(static_cast<int>(model->ne));
 
         if (nx() == 0)
             return;
@@ -283,7 +283,7 @@ namespace suneigen {
 
     realtype Solver::gett() const { return t_; }
 
-    size_t Solver::np() const { return sx_.getLength(); }
+    unsigned int Solver::np() const { return static_cast<unsigned int>(sx_.getLength()); }
 
     size_t Solver::nx() const { return x_.getLength(); }
 
@@ -298,6 +298,8 @@ namespace suneigen {
         nrhs_.clear();
         netf_.clear();
         nnlscf_.clear();
+        nnlsi_.clear();
+        nje_.clear();
         order_.clear();
 
         nsB_.clear();
@@ -319,6 +321,8 @@ namespace suneigen {
             nrhs_.push_back(0);
             netf_.push_back(0);
             nnlscf_.push_back(0);
+            nnlsi_.push_back(0);
+            nje_.push_back(0);
             order_.push_back(0);
             return;
         }
@@ -335,6 +339,12 @@ namespace suneigen {
 
         getNumNonlinSolvConvFails(solver_memory_.get(), &lnumber);
         nnlscf_.push_back(lnumber);
+
+        getNumNonlinSolvIters(solver_memory_.get(), &lnumber);
+        nnlsi_.push_back(lnumber);
+
+        getNumJacEvals(solver_memory_.get(), &lnumber);
+        nje_.push_back(lnumber);
 
         size_t number;
         getLastOrder(solver_memory_.get(), &number);
@@ -382,9 +392,11 @@ namespace suneigen {
     void Solver::initializeLinearSolver(const Model* model) const {
 
         (void) model;
-        switch (linsol_) {
 
-            /* DIRECT SOLVERS */
+        // Assert such that no default case is needed in switch statement.
+        assert(linsol_ == LinearSolver::dense || linsol_ == LinearSolver::SuperLU);
+
+        switch (linsol_) {
 
             case LinearSolver::dense:
                 linear_solver_ = std::make_unique<SUNLinSolDense>(x_);
@@ -392,11 +404,12 @@ namespace suneigen {
                 setDenseJacFn();
                 break;
 
-            /* ITERATIVE SOLVERS */
-
-            default:
-                throw SunException("Invalid choice of solver: %d",
-                                   static_cast<int>(linsol_));
+            case LinearSolver::SuperLU:
+                linear_solver_ = std::make_unique<SUNLinSolSuperLU>(
+                        x_, model->nnz, CSC_MAT);
+                setLinearSolver();
+                setSparseJacFn();
+                break;
         }
     }
 

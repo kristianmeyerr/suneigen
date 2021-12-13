@@ -10,6 +10,31 @@
 namespace suneigen {
 
     /**
+     * @brief Exchange format to store and transfer the state of the
+     * model at a specific timepoint.
+     *
+     * This is designed to only encompass the minimal
+     * number of attributes that need to be transferred.
+     */
+    struct ModelState {
+        /**
+         * Flag indicating whether a certain Heaviside function should be active or
+         * not (dimension: `ne`)
+         */
+        std::vector<realtype> h;
+
+        /** States (dimension: `nx`) */
+        std::vector<realtype> x;
+
+        /** parameters (dimension: `np`) */
+        std::vector<realtype> parameters;
+
+        /** Constants (dimension: `nk`) */
+        std::vector<realtype> fixedParameters;
+
+    };
+
+    /**
      * @brief Storage for `suneigen::Model` quantities computed for a specific timepoint.
      *
      * Serves as workspace for a model simulation to avoid repeated reallocation.
@@ -31,6 +56,9 @@ namespace suneigen {
          */
         std::vector<realtype> sx_;
 
+        /** temporary storage for event-resolved observable (dimension: nz) */
+        std::vector<realtype> z_;
+
         /** temporary storage for `x_rdata` */
         std::vector<realtype> x_rdata_;
 
@@ -40,6 +68,9 @@ namespace suneigen {
         /** temporary storage of positified state variables according to
          * stateIsNonNegative */
         Vector x_pos_tmp_ {0};
+
+        /** temporary storage for change in x after event (dimension: `nx`) */
+        std::vector<realtype> deltax_;
     };
 }
 

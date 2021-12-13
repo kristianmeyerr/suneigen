@@ -31,8 +31,30 @@ namespace suneigen {
         auto x_pos = computeX_pos(x);
         N_VConst(0.0, xdot);
         fxdot(N_VGetArrayPointer(xdot), t,
-              N_VGetArrayPointerConst(x_pos));
+              N_VGetArrayPointerConst(x_pos),state_.parameters.data(),
+              state_.fixedParameters.data(),
+              state_.h.data());
 
+    }
+
+    void Model_ODE::froot(const realtype t, const Vector &x,
+                          const Vector & /*dx*/, gsl::span<realtype> root) {
+        froot(t, x.getNVector(), root);
+    }
+
+    void Model_ODE::froot(realtype t, const_N_Vector x, gsl::span<realtype> root) {
+        auto x_pos = computeX_pos(x);
+        std::fill(root.begin(), root.end(), 0.0);
+        froot(root.data(), t, N_VGetArrayPointerConst(x_pos),
+              state_.parameters.data(), state_.fixedParameters.data(), state_.h.data());
+    }
+
+    void Model_ODE::froot(realtype * /*root*/, const realtype /*t*/,
+                          const realtype * /*x*/, const realtype * /*p*/,
+                          const realtype * /*k*/, const realtype * /*h*/) {
+        throw SunException("Requested functionality is not supported as %s is not "
+                           "implemented for this model!",
+                           __func__); // not implemented
     }
 
     void Model_ODE::fJSparse(const realtype t, const realtype /*cj*/,
@@ -49,8 +71,18 @@ namespace suneigen {
 
         auto x_pos = computeX_pos(x);
         fJSparse(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(J)), t,
-                 N_VGetArrayPointerConst(x_pos));
+                 N_VGetArrayPointerConst(x_pos), state_.parameters.data(),
+                 state_.fixedParameters.data(), state_.h.data());
 
+    }
+
+    void Model_ODE::fJSparse(SUNMatrixContent_Sparse /*JSparse*/,
+                             const realtype /*t*/, const realtype * /*x*/,
+                             const realtype * /*p*/, const realtype * /*k*/,
+                             const realtype * /*h*/) {
+        throw SunException("Requested functionality is not supported as %s "
+                           "is not implemented for this model!",
+                           __func__); // not implemented
     }
 
 }

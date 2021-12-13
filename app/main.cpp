@@ -1,55 +1,53 @@
 #include <iostream>
-
+#include <Eigen/SparseCore>
 #include "model_robertson.h"
 #include "suneigen.h"
 
+
 int main() {
+
+    std::cout<<"********************************"<<std::endl;
+    std::cout<<"** Running forward simulation **"<<std::endl;
+    std::cout<<"********************************"<<std::endl<<std::endl;
 
     // Create a model instance
     auto model = suneigen::generic_model::getModel();
 
     // Set desired output timepoints
-    model->setTimepoints({4.0e1, 4.0e2});
+    model->setTimepoints({4.0e1, 4.0e2, 4.0e3, 4.0e4, 4.0e5, 4.0e6, 4.0e7, 4.0e8});
+
+    // Set parameters
+    std::vector<realtype> p{0.04, 1.0e4, 3.0e7};
+    model->setParameters(p);
+
+    // Set fixed parameters
+    std::vector<realtype> k{1.0};
+    model->setFixedParameters(k);
 
     // Create a solver instance
     auto solver = model->getSolver();
 
     // Optionally set integration tolerance
-    solver->setAbsoluteTolerance(1e-16);
+    solver->setAbsoluteTolerance(1e-12);
     solver->setRelativeTolerance(1e-8);
+    solver->setLinearSolver(suneigen::LinearSolver::dense);
 
     // Create an application instance
     auto app = suneigen::SunApplication();
 
     // Run the simulation
-    auto rdata = app.runSimulation(*solver,*model);
+    auto rdata = app.runSimulation(*solver, *model);
 
     for (unsigned int i = 0; i < model->getTimepoints().size(); ++i) {
-        std::cout << rdata->x[i] << " " << rdata->x[i + 1] << " " << rdata->x[i + 2] << std::endl;
+        std::cout << rdata->x[i] << " " << rdata->x[i + 1] << " " << rdata->x[i + 2] << " " << std::endl;
     }
 
-    // Statistics
-    int numnonlinsolvconvfails_total = 0;
-    for (auto& n : rdata->numnonlinsolvconvfails)
-        numnonlinsolvconvfails_total += n;
+    std::cout << std::endl;
+    std::cout << "Root 1 at time t=" << rdata->z[0] << " " << std::endl;
+    std::cout << "Root 2 at time t=" << rdata->z[1] << " " << std::endl;
 
-    int numerrtestfails_total = 0;
-    for (auto& n : rdata->numerrtestfails)
-        numerrtestfails_total += n;
-
-    int numrhsevals_total = 0;
-    for (auto& n : rdata->numrhsevals)
-        numrhsevals_total += n;
-
-    int numsteps_total = 0;
-    for (auto& n : rdata->numsteps)
-        numsteps_total += n;
-
-    std::cout << "CPU time (s): " << rdata->cpu_time << std::endl;
-    std::cout << "Number of RHS evaluations: " << numrhsevals_total << std::endl;
-    std::cout << "Number of steps used: " << numsteps_total << std::endl;
-    std::cout << "Number of nonlinear solver convergence failures: " << numnonlinsolvconvfails_total << std::endl;
-    std::cout << "Number of error test failures: " << numerrtestfails_total << std::endl;
+    std::cout << std::endl;
+    rdata->printStatistics();
 
     /*
 

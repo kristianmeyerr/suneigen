@@ -47,7 +47,7 @@ namespace suneigen {
 
     std::unique_ptr<ReturnData>
     SunApplication::runSimulation(Solver& solver, Model& model, bool rethrow) {
-        (void) rethrow;
+
         solver.startTimer();
         std::unique_ptr<ReturnData> rdata = std::make_unique<ReturnData>(solver, model);
 

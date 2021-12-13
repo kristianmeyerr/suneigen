@@ -49,7 +49,7 @@ namespace suneigen::model_robertson{
     void root_model_robertson(realtype *root, const realtype /*t*/, const realtype *x,
                               const realtype */*p*/, const realtype */*k*/, const realtype */*h*/) {
         root[0] = x[2] - RCONST(0.01);
-        root[1] = RCONST(0.0001) - x[0];  // Change sign we only store true -> false transitions
+        root[1] = RCONST(0.0001) - x[0];
     }
 
     void fz_model_robertson(double *z, const unsigned int ie, const realtype t, const realtype */*x*/,

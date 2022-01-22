@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
-project(SUNEIGEN VERSION 0.0.1 LANGUAGES CXX)
+project(suneigen VERSION 0.0.1 LANGUAGES CXX)
 
 # --------------------------------------------------------------------------------
 #                         Options
@@ -10,8 +10,7 @@ project(SUNEIGEN VERSION 0.0.1 LANGUAGES CXX)
 option(ENABLE_WARNINGS_SETTINGS "Allow target_set_warnings to add flags and defines.
                                  Set this to OFF if you want to provide your own warning parameters." ON)
 option(ENABLE_LTO "Enable link time optimization" ON)
-option(ENABLE_DOCTESTS "Include tests in the library. Setting this to OFF will remove all doctest related code.
-                        Tests in tests/*.cpp will still be enabled." ON)
+
 option(SUNEIGEN_BUILD_PYTHON "Enable the compilation of the python module." ON)
 option(SUNEIGEN_BUILD_TESTS "Enable the compilation of the test files." ON)
 option(SUNEIGEN_BUILD_APP "Enable the compilation of the app files." ON)
@@ -35,8 +34,12 @@ include(LTO)
 include(Misc)
 include(Warnings)
 include(Documentation)
-include(Doctest)
-include(ThirdParty)
+
+find_package(Doctest 2 REQUIRED)
+
+find_package(Eigen3 3.4 REQUIRED)  # Requires system install
+find_package(SUNDIALS 5.8 REQUIRED COMPONENTS sundials_cvodes sundials_nvecserial)
+set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/gsl/")
 
 # Check for LTO support.
 find_lto(CXX)
@@ -91,7 +94,6 @@ install(TARGETS ${LIBRARY_NAME} DESTINATION bin)
 # Link libraries used.
 target_link_libraries(${LIBRARY_NAME}
     PUBLIC
-        doctest
         Eigen3::Eigen
         SUNDIALS::sundials_cvodes
         SUNDIALS::sundials_nvecserial

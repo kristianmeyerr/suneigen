@@ -18,7 +18,7 @@ add_executable(${TEST_MAIN} ${TESTFILES} ${MODELFILES})
 target_link_libraries(${TEST_MAIN}
     PRIVATE
         ${LIBRARY_NAME}
-        doctest
+        doctest::doctest
         Eigen3::Eigen
 )
 

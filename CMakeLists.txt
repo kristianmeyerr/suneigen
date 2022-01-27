@@ -116,7 +116,7 @@ target_set_warnings(${LIBRARY_NAME} ENABLE ALL AS_ERROR ALL DISABLE Annoying)
 
 set_target_properties(${LIBRARY_NAME}
     PROPERTIES
-        CXX_STANDARD 20
+        CXX_STANDARD 17
         CXX_STANDARD_REQUIRED YES
         CXX_EXTENSIONS NO
 )
@@ -173,7 +173,7 @@ if(SUNEIGEN_BUILD_PYTHON)
 
     set_target_properties(${PYTHON_MODULE_NAME}
         PROPERTIES
-            CXX_STANDARD 20
+            CXX_STANDARD 17
             CXX_STANDARD_REQUIRED YES
             CXX_EXTENSIONS NO
     )

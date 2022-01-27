@@ -14,6 +14,7 @@ option(ENABLE_LTO "Enable link time optimization" ON)
 option(SUNEIGEN_BUILD_PYTHON "Enable the compilation of the python module." ON)
 option(SUNEIGEN_BUILD_TESTS "Enable the compilation of the test files." ON)
 option(SUNEIGEN_BUILD_APP "Enable the compilation of the app files." ON)
+option(SUNEIGEN_USE_DOXYGEN "Add a doxygen target to generate the documentation." ON)
 
 if(SUNEIGEN_BUILD_PYTHON)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -23,27 +24,36 @@ endif()
 #                         CMake includes
 # --------------------------------------------------------------------------------
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
 # Configure the project for testing with CTest
 include(CTest)
 
 # Include custom modules
-include(ConfigSafeGuards)
-include(LTO)
-include(Misc)
-include(Warnings)
-include(Documentation)
+include(cmake/ConfigSafeGuards.cmake)
+include(cmake/LTO.cmake)
+include(cmake/Warnings.cmake)
 
 find_package(Doctest 2 REQUIRED)
 
-find_package(Eigen3 3.4 REQUIRED)  # Requires system install
+find_package(Eigen3 3.4 REQUIRED)
 find_package(SUNDIALS 5.8 REQUIRED COMPONENTS sundials_cvodes sundials_nvecserial)
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/gsl/")
 
 # Check for LTO support.
 find_lto(CXX)
 
+if (${SUNEIGEN_USE_DOXYGEN})
+    find_package(Doxygen) # Triggers -Wpoison-system-directories
+    if(DOXYGEN_FOUND)
+        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+        add_custom_target(doc
+                ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile &> doxygen.log
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                COMMENT "${BoldMagenta}Generating API documentation with Doxygen (open ./html/index.html to view).${ColourReset}" VERBATIM
+                )
+    endif()
+endif ()
 
 # --------------------------------------------------------------------------------
 #                            Build the library

@@ -5,3 +5,6 @@
 [submodule "thirdparty/doctest"]
 	path = thirdparty/doctest
 	url = https://github.com/doctest/doctest.git
+[submodule "thirdparty/eigen"]
+	path = thirdparty/eigen
+	url = https://gitlab.com/libeigen/eigen.git

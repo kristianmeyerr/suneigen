@@ -48,4 +48,4 @@ add_test(
 )
 
 # Adds a 'coverage' target.
-include(CodeCoverage)
+include(../cmake/CodeCoverage.cmake)

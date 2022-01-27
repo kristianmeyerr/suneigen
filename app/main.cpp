@@ -3,6 +3,7 @@
 #include "model_robertson.h"
 #include "suneigen.h"
 
+using namespace suneigen;
 
 int main() {
 
@@ -11,7 +12,7 @@ int main() {
     std::cout<<"********************************"<<std::endl<<std::endl;
 
     // Create a model instance
-    auto model = suneigen::generic_model::getModel();
+    auto model = generic_model::getModel();
 
     // Set desired output timepoints
     model->setTimepoints({4.0e1, 4.0e2, 4.0e3, 4.0e4, 4.0e5, 4.0e6, 4.0e7, 4.0e8});
@@ -33,7 +34,7 @@ int main() {
     solver->setLinearSolver(suneigen::LinearSolver::dense);
 
     // Create an application instance
-    auto app = suneigen::SunApplication();
+    auto app = SunApplication();
 
     // Run the simulation
     auto rdata = app.runSimulation(*solver, *model);

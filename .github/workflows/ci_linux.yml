@@ -32,6 +32,10 @@ jobs:
         with:
           submodules: true
 
+      - name: Build Sundials
+        run: |
+          scripts/buildSundials.sh
+
       - name: Install dependencies
         run: |
           sudo apt-get install -y valgrind

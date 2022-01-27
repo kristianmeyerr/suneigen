@@ -25,8 +25,8 @@ set(SUNDIALS_VERSION "${SUNDIALS_VERSION_MAJOR}.${SUNDIALS_VERSION_MINOR}.${SUND
 
 # Library settings
 set(SUNDIALS_WANT_COMPONENTS
-        sundials_cvodes
-        sundials_nvecserial
+    sundials_cvodes
+    sundials_nvecserial
 )
 set(SUNDIALS_PREFER_STATIC_LIBRARIES ON)
 
@@ -57,9 +57,9 @@ endforeach()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(SUNDIALS
-        REQUIRED_VARS SUNDIALS_LIBRARIES SUNDIALS_INCLUDE_DIR
-        VERSION_VAR SUNDIALS_VERSION
-        HANDLE_COMPONENTS
+    REQUIRED_VARS SUNDIALS_LIBRARIES SUNDIALS_INCLUDE_DIR
+    VERSION_VAR SUNDIALS_VERSION
+    HANDLE_COMPONENTS
 )
 
 include(FeatureSummary)
@@ -81,7 +81,7 @@ if (SUNDIALS_FOUND)
 endif()
 
 mark_as_advanced(
-        SUNDIALS_LIBRARIES
-        SUNDIALS_INCLUDE_DIR
-        SUNDIALS_INCLUDE_DIRS
+    SUNDIALS_LIBRARIES
+    SUNDIALS_INCLUDE_DIR
+    SUNDIALS_INCLUDE_DIRS
 )

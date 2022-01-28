@@ -68,8 +68,8 @@ jobs:
                 -DBUILD_SUNNONLINSOL_PETSCSNES=OFF
                 -DEXAMPLES_INSTALL=OFF
                 -DEXAMPLES_ENABLE_C=OFF
-                -S thirdparty/sundials
-                -B thirdparty/sundials/build
+                -S ./thirdparty/sundials
+                -B ./thirdparty/sundials/build
 
       - name: Configure (${{ matrix.configuration }})
         shell: powershell

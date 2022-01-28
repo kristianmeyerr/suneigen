@@ -1,0 +1,8 @@
+name: suneigen
+
+channels:
+  - conda-forge
+
+dependencies:
+  - clcache
+  - cmake>=3.16

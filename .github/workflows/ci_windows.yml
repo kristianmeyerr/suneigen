@@ -56,20 +56,20 @@ jobs:
         shell: powershell
         run: |
           conda activate suneigen
-          cmake -DCMAKE_INSTALL_PREFIX=thirdparty/sundials/install
-                -DCMAKE_BUILD_TYPE=Release
-                -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-                -DBUILD_ARKODE=OFF
-                -DBUILD_CVODE=OFF
-                -DBUILD_IDA=OFF
-                -DBUILD_SHARED_LIBS=OFF
-                -DBUILD_STATIC_LIBS=ON
-                -DBUILD_NVECTOR_MANYVECTOR=OFF
-                -DBUILD_SUNNONLINSOL_PETSCSNES=OFF
-                -DEXAMPLES_INSTALL=OFF
-                -DEXAMPLES_ENABLE_C=OFF
-                -S ./thirdparty/sundials
-                -B ./thirdparty/sundials/build
+          cmake |
+            -DCMAKE_INSTALL_PREFIX=thirdparty/sundials/install -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+            -DBUILD_ARKODE=OFF
+            -DBUILD_CVODE=OFF
+            -DBUILD_IDA=OFF
+            -DBUILD_SHARED_LIBS=OFF
+            -DBUILD_STATIC_LIBS=ON
+            -DBUILD_NVECTOR_MANYVECTOR=OFF
+            -DBUILD_SUNNONLINSOL_PETSCSNES=OFF
+            -DEXAMPLES_INSTALL=OFF
+            -DEXAMPLES_ENABLE_C=OFF
+            -S ./thirdparty/sundials
+            -B ./thirdparty/sundials/build
 
       - name: Configure (${{ matrix.configuration }})
         shell: powershell

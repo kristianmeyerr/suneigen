@@ -57,8 +57,7 @@ jobs:
         run: |
           conda activate suneigen
           cmake |
-            -DCMAKE_INSTALL_PREFIX=thirdparty/sundials/install -DCMAKE_BUILD_TYPE=Release
-            -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+            -DCMAKE_INSTALL_PREFIX=./thirdparty/sundials/install -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON
             -DBUILD_ARKODE=OFF
             -DBUILD_CVODE=OFF
             -DBUILD_IDA=OFF

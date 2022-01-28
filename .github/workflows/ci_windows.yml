@@ -27,23 +27,23 @@ jobs:
             compiler: msvc
 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v2
         with:
           submodules: true
 
-      -uses: conda-incubator/setup-miniconda@v2
+      - uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
           auto-activate-base: true
           activate-environment: ''
-        - name: Conda Environment
-          shell: powershell
-            run: |
-              conda config --set always_yes yes --set changeps1 no
-              conda config --add channels conda-forge
-              conda install conda-devenv
-              conda devenv
+      - name: Conda Environment
+        shell: powershell
+        run: |
+          conda config --set always_yes yes --set changeps1 no
+          conda config --add channels conda-forge
+          conda install conda-devenv
+          conda devenv
 
       - name: Cache
         id: cache

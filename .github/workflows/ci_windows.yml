@@ -1,0 +1,87 @@
+name: CI windows
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-and-test:
+
+    name: ${{ matrix.toolchain }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: true
+      matrix:
+        toolchain:
+          - windows-msvc
+
+        configuration:
+          - Debug
+
+        include:
+          - toolchain: windows-msvc
+            os: windows-latest
+            compiler: msvc
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          auto-activate-base: true
+          activate-environment: ''
+        - name: Conda Environment
+          shell: powershell
+          run: |
+            conda config --set always_yes yes --set changeps1 no
+            conda config --add channels conda-forge
+            conda install conda-devenv
+            conda devenv
+
+      - name: Cache
+        id: cache
+        uses: actions/cache@v2
+        with:
+          path: $HOME\clcache
+          key: ${{ runner.os }}-clcache
+
+      - name: Build SUNDIALS
+        shell: powershell
+        run: |
+          conda activate suneigen
+          cmake -DCMAKE_INSTALL_PREFIX=thirdparty/sundials/install
+                -DCMAKE_BUILD_TYPE=Release
+                -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+                -DBUILD_ARKODE=OFF
+                -DBUILD_CVODE=OFF
+                -DBUILD_IDA=OFF
+                -DBUILD_SHARED_LIBS=OFF
+                -DBUILD_STATIC_LIBS=ON
+                -DBUILD_NVECTOR_MANYVECTOR=OFF
+                -DBUILD_SUNNONLINSOL_PETSCSNES=OFF
+                -DEXAMPLES_INSTALL=OFF
+                -DEXAMPLES_ENABLE_C=OFF
+                -S thirdparty/sundials
+                -B thirdparty/sundials/build
+
+      - name: Configure (${{ matrix.configuration }})
+        shell: powershell
+        run: |
+          conda activate suneigen
+          cmake -S . -Bbuild -DCMAKE_BUILD_TYPE=${{ matrix.configuration }}
+
+      - name: Build with ${{ matrix.compiler }}
+        run: cmake --build build --config ${{ env.configuration }}
+
+      - name: Test
+        working-directory: build
+        env:
+          CTEST_OUTPUT_ON_FAILURE: 1
+        run: ctest -C ${{ matrix.configuration }}

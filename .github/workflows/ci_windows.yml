@@ -53,26 +53,5 @@ jobs:
           key: ${{ runner.os }}-clcache
 
       - name: Build SUNDIALS
-        shell: powershell
         run: |
-          conda activate suneigen
-          New-Item -Path './thirdparty/sundials/install' -ItemType Directory
-          New-Item -Path './thirdparty/sundials/build' -ItemType Directory
-          cmake ./thirdparty/sundials
-          cmake --build ./thirdparty/sundials/build --config Release --target ALL_BUILD
-          cmake --build thirdparty/sundials/build --config Release --target install
-
-      - name: Configure (${{ matrix.configuration }})
-        shell: powershell
-        run: |
-          conda activate suneigen
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.configuration }}
-
-      - name: Build with ${{ matrix.compiler }}
-        run: cmake --build build --config ${{ env.configuration }}
-
-      - name: Test
-        working-directory: build
-        env:
-          CTEST_OUTPUT_ON_FAILURE: 1
-        run: ctest -C ${{ matrix.configuration }}
+          scripts\buildSundials.ps1

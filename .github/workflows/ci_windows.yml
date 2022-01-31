@@ -53,5 +53,6 @@ jobs:
           key: ${{ runner.os }}-clcache
 
       - name: Build SUNDIALS
+        shell: powershell
         run: |
           scripts\buildSundials.ps1

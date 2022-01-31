@@ -57,7 +57,8 @@ jobs:
         run: |
           conda activate suneigen
           New-Item -Path './thirdparty/sundials/install' -ItemType Directory
-          cmake -S ./thirdparty/sundials -B ./thirdparty/sundials/build -DCMAKE_INSTALL_PREFIX=./thirdparty/sundials/install \
+          New-Item -Path './thirdparty/sundials/build' -ItemType Directory
+          cmake -DCMAKE_INSTALL_PREFIX=./thirdparty/sundials/install \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                 -DBUILD_ARKODE=OFF \
@@ -68,9 +69,9 @@ jobs:
                 -DBUILD_NVECTOR_MANYVECTOR=OFF \
                 -DBUILD_SUNNONLINSOL_PETSCSNES=OFF \
                 -DEXAMPLES_INSTALL=OFF \
-                -DEXAMPLES_ENABLE_C=OFF
-          cmake --build thirdparty/sundials/build
-          cmake --build thirdparty/sundials/build --target install
+                -DEXAMPLES_ENABLE_C=OFF ./thirdparty/sundials
+          cmake --build ./thirdparty/sundials/build --config Release --target ALL_BUILD
+          cmake --build thirdparty/sundials/build --config Release --target install
 
       - name: Configure (${{ matrix.configuration }})
         shell: powershell

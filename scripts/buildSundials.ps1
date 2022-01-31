@@ -9,8 +9,8 @@ $SUNDIALS_INSTALL_PATH="$ROOT_PATH" + "\thirdparty\sundials\install"
 $BUILD_TYPE="Release"
 
 # Create build and install directories
-ni $SUNDIALS_BUILD_PATH
-ni $SUNDIALS_INSTALL_PATH
+New-Item -Path "$SUNDIALS_BUILD_PATH" -ItemType Directory
+New-Item -Path "$SUNDIALS_INSTALL_PATH" -ItemType Directory
 
 # cd to the build directory ..
 cd $SUNDIALS_BUILD_PATH

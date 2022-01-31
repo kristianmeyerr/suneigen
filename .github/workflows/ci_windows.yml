@@ -56,7 +56,7 @@ jobs:
         shell: powershell
         run: |
           conda activate suneigen
-          cmake -DCMAKE_INSTALL_PREFIX=thirdparty/sundials/install \
+          cmake -DCMAKE_INSTALL_PREFIX=./thirdparty/sundials/install \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                 -DBUILD_ARKODE=OFF \
@@ -68,8 +68,8 @@ jobs:
                 -DBUILD_SUNNONLINSOL_PETSCSNES=OFF \
                 -DEXAMPLES_INSTALL=OFF \
                 -DEXAMPLES_ENABLE_C=OFF \
-                -S thirdparty/sundials \
-                -B thirdparty/sundials/build
+                -S ./thirdparty/sundials \
+                -B ./thirdparty/sundials/build
 
           cmake --build thirdparty/sundials/build
           cmake --build thirdparty/sundials/build --target install

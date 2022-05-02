@@ -241,6 +241,12 @@ namespace suneigen {
         void setMaxSteps(size_t maxsteps);
 
         /**
+         * @brief Sets the maximum number of error test failues for the forward problem
+         * @param maxfails max fails
+         */
+        void setMaxErrorTests(size_t maxfails);
+
+        /**
          * @brief Returns the maximum time allowed for integration
          * @return Time in seconds
          */
@@ -531,6 +537,23 @@ namespace suneigen {
         virtual std::string getSolverType() const = 0;
 
         /**
+        * @brief specifies the maximum number of steps for the forward problem
+         *
+         * @param mxsteps number of steps
+         * @note in contrast to the SUNDIALS method, this sets the overall maximum, not the maximum between output times.
+         */
+        virtual void setMaxNumSteps(size_t mxsteps) const = 0;
+
+        /**
+        * @brief specifies the maximum number of error test failures permitted in attempting one step.
+         *
+         * @param mxsteps number of steps
+         */
+        virtual void setMaxErrTestFails(size_t mxsteps) const = 0;
+
+        void apply_max_error_test_fails() const;
+
+        /**
          * @brief Check equality of data members excluding solver memory
          * @param a Solver
          * @param b Solver
@@ -659,14 +682,6 @@ namespace suneigen {
          * @brief Attaches the user data to the forward problem
         */
         virtual void setUserData() const = 0;
-
-        /**
-        * @brief specifies the maximum number of steps for the forward problem
-         *
-         * @param mxsteps number of steps
-         * @note in contrast to the SUNDIALS method, this sets the overall maximum, not the maximum between output times.
-         */
-        virtual void setMaxNumSteps(size_t mxsteps) const = 0;
 
         /**
          * @brief activates stability limit detection for the forward
@@ -904,6 +919,9 @@ namespace suneigen {
         /** maximum number of allowed integration steps */
         size_t maxsteps_ {10000};
 
+        /** maximum number of error test failures */
+        size_t maxErrorTestFails_ {7};
+
         /** Maximum wall-time for integration in seconds */
         std::chrono::duration<double, std::ratio<1>> maxtime_ {std::chrono::duration<double>::max()};
 
@@ -967,6 +985,8 @@ namespace suneigen {
 
         /** flag to force reInitPostProcessF before next call to solve */
         mutable bool force_reinit_postprocess_F_ {false};
+
+
 
     private:
 

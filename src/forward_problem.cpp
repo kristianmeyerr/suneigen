@@ -36,6 +36,7 @@ namespace suneigen {
 
         auto t0 = model->t0();
         solver->setup(t0, model, x_, dx_, sx_, sdx_);
+        solver->apply_max_error_test_fails();
 
         // update x0 after computing consistence IC/reinitialization
         x_ = solver->getState(model->t0());

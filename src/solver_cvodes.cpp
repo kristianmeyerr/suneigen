@@ -174,8 +174,14 @@ namespace suneigen {
             throw CvodeException(status, "CVodeSetUserData");
     }
 
+    void CVodeSolver::setMaxErrTestFails(size_t mxsteps) const {
+        int status = CVodeSetMaxErrTestFails(solver_memory_.get(), static_cast<int>(mxsteps));
+        if (status != CV_SUCCESS)
+            throw CvodeException(status, "CVodeSetMaxErrTestFails");
+    }
+
     void CVodeSolver::setMaxNumSteps(size_t mxsteps) const {
-        int status = CVodeSetMaxNumSteps(solver_memory_.get(), static_cast<long>(mxsteps));
+        int status = CVodeSetMaxNumSteps(solver_memory_.get(), static_cast<int>(mxsteps));
         if (status != CV_SUCCESS)
             throw CvodeException(status, "CVodeSetMaxNumSteps");
     }
@@ -529,6 +535,7 @@ namespace suneigen {
         Expects(typed_udata);
         return typed_udata->first;
     }
+
 
 
 

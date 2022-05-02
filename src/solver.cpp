@@ -23,6 +23,10 @@ namespace suneigen {
         setMaxNumSteps(maxsteps_ - cursteps);
     }
 
+    void Solver::apply_max_error_test_fails() const {
+        setMaxErrTestFails(maxErrorTestFails_);
+    }
+
     Solver::~Solver() = default;
 
     Solver::Solver(const Solver& other) : atol_(other.atol_) {}
@@ -86,6 +90,17 @@ namespace suneigen {
             throw SunException("maxsteps must be a positive number");
 
         maxsteps_ = maxsteps;
+
+        if (getAdjInitDone())
+            resetMutableMemory(nx(), np(), nquad());
+
+    }
+
+    void Solver::setMaxErrorTests(size_t maxfails) {
+        if (maxfails <= 0)
+            throw SunException("maxsteps must be a positive number");
+
+        maxErrorTestFails_ = maxfails;
 
         if (getAdjInitDone())
             resetMutableMemory(nx(), np(), nquad());

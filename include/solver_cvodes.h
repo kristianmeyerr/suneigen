@@ -50,6 +50,10 @@ namespace suneigen {
 
         void setNonLinearSolverSens() const override;
 
+        void setMaxErrTestFails(size_t mxsteps) const override;
+
+        void setMaxNumSteps(size_t mxsteps) const override;
+
     protected:
 
         void calcIC(realtype tout1) const override;
@@ -78,8 +82,6 @@ namespace suneigen {
                                realtype tout) const;
 
         void setUserData() const override;
-
-        void setMaxNumSteps(size_t mxsteps) const override;
 
         void setStabLimDet(int stldet) const override;
 

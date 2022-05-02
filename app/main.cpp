@@ -31,6 +31,8 @@ int main() {
     // Optionally set integration tolerance
     solver->setAbsoluteTolerance(1e-12);
     solver->setRelativeTolerance(1e-8);
+    solver->setMaxSteps(10000);
+    solver->setMaxErrorTests(7);
     solver->setLinearSolver(suneigen::LinearSolver::dense);
 
     // Create an application instance
